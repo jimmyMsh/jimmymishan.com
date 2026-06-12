@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (git SHA) to deploy; defaults to this commit"
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+
+  images:
+    needs: checks
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/site.Dockerfile
+          target: prod
+          push: true
+          tags: |
+            ghcr.io/jimmymsh/jimmymishan.com/site:latest
+            ghcr.io/jimmymsh/jimmymishan.com/site:${{ github.sha }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          push: true
+          build-args: |
+            COMMIT=${{ github.sha }}
+          tags: |
+            ghcr.io/jimmymsh/jimmymishan.com/api:latest
+            ghcr.io/jimmymsh/jimmymishan.com/api:${{ github.sha }}
+
+  deploy:
+    needs: images
+    if: github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_IP: ${{ secrets.SSH_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy-key
+          chmod 600 ~/.ssh/deploy-key
+          cat >> ~/.ssh/config <<EOF
+          Host vps
+            HostName $SSH_IP
+            User $SSH_USER
+            IdentityFile ~/.ssh/deploy-key
+            StrictHostKeyChecking accept-new
+          EOF
+      - name: Sync compose and scripts
+        run: |
+          ssh vps 'mkdir -p ~/jimmymishan.com/scripts'
+          scp compose.prod.yaml vps:~/jimmymishan.com/
+          scp scripts/*.sh vps:~/jimmymishan.com/scripts/
+          ssh vps 'chmod +x ~/jimmymishan.com/scripts/*.sh'
+      - name: Deploy
+        run: |
+          TAG="${{ inputs.tag || github.sha }}"
+          ssh vps "cd ~/jimmymishan.com && TAG=$TAG docker compose -f compose.prod.yaml pull && TAG=$TAG docker compose -f compose.prod.yaml up -d --remove-orphans && docker image prune -f"
+      - name: Health check
+        run: |
+          sleep 10
+          curl -fsS https://jimmymishan.com/api/healthz
+      - name: Notify success
+        if: success()
+        run: 'curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" -d "content=🚀 Deployed ${{ inputs.tag || github.sha }}"'
+      - name: Notify failure
+        if: failure()
+        run: 'curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" -d "content=🚨 Deploy failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"'
