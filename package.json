@@ -1,0 +1,21 @@
+{
+  "name": "jimmymishan.com",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "site",
+    "api",
+    "e2e"
+  ],
+  "scripts": {
+    "check": "biome ci . && npm run -w site check && npm run -w api check",
+    "test": "npm run -w site test && npm run -w api test",
+    "build": "npm run -w site build && npm run -w api build",
+    "e2e": "npm run -w e2e test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0"
+  }
+}
