@@ -1,0 +1,35 @@
+services:
+  nginx:
+    image: ghcr.io/jimmymsh/jimmymishan.com/site:${TAG:-latest}
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
+    depends_on:
+      api:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  api:
+    image: ghcr.io/jimmymsh/jimmymishan.com/api:${TAG:-latest}
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  nginx_secrets:

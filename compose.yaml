@@ -1,0 +1,28 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/site.Dockerfile
+      target: local
+    ports:
+      - "8080:80"
+      - "8443:443"
+    depends_on:
+      - api
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    volumes:
+      - ./data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
