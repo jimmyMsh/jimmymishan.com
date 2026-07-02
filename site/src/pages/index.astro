@@ -75,7 +75,11 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
             <li>{highlight}</li>
           ))}
         </ul>
-        {entry.data.link && <a href={entry.data.link}>Learn more about {entry.data.company}</a>}
+        {entry.data.link && (
+          <p class="entry-link">
+            <a href={entry.data.link}>{new URL(entry.data.link).hostname.replace(/^www\./, "")}<span aria-hidden="true"> ↗</span></a>
+          </p>
+        )}
       </article>
     ))}
   </section>
@@ -258,6 +262,11 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     padding-left: var(--space-6);
     display: grid;
     gap: var(--space-2);
+  }
+  .entry-link {
+    margin-top: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
   }
 
   /* projects */
