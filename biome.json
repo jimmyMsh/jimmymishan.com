@@ -5,6 +5,9 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
+  "html": {
+    "experimentalFullSupportEnabled": true
+  },
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2
