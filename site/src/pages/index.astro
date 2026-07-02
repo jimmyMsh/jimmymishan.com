@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
 import profile from "../assets/img/profile.jpg";
+import Terminal from "../components/Terminal.astro";
 import TerminalFrame from "../components/TerminalFrame.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { formatRange } from "../lib/dates";
@@ -22,11 +23,8 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
       </p>
       <a class="cta" href="/resume">View resume</a>
     </div>
-    <TerminalFrame decorative>
-      <p><span class="prompt">$</span> whoami</p>
-      <p>production engineer @ meta — I keep systems fast, boring, and online.</p>
-      <p><span class="prompt">$</span> <span class="cursor"></span></p>
-      <p class="hint"># the interactive terminal comes online soon — type `help` when it does</p>
+    <TerminalFrame>
+      <Terminal />
     </TerminalFrame>
   </section>
 
@@ -170,31 +168,6 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     border-radius: var(--radius-sm);
     text-decoration: none;
   }
-  .prompt {
-    color: var(--color-accent);
-  }
-  .hint {
-    color: var(--color-text-muted);
-  }
-  .cursor {
-    display: inline-block;
-    width: 0.6em;
-    height: 1.1em;
-    vertical-align: text-bottom;
-    background: var(--color-accent);
-    animation: blink 1.1s steps(1) infinite;
-  }
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .cursor {
-      animation: none;
-    }
-  }
-
   /* about */
   .about-grid {
     display: grid;

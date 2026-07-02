@@ -1,0 +1,146 @@
+---
+import { getCollection } from "astro:content";
+import { EMAIL, GITHUB_URL, LINKEDIN_URL, TAGLINE } from "../lib/meta";
+import { buildFiles } from "../lib/terminal/content";
+import type { TerminalPayload } from "../lib/terminal/types";
+
+const work = (await getCollection("work"))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map(({ data }) => ({
+    role: data.role,
+    company: data.company,
+    start: data.start,
+    end: data.end,
+    summary: data.summary,
+    highlights: data.highlights,
+  }));
+
+const projects = (await getCollection("projects"))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map(({ data }) => ({
+    name: data.name,
+    summary: data.summary,
+    tags: data.tags,
+    repo: data.repo,
+    link: data.link,
+  }));
+
+const payload: TerminalPayload = {
+  tagline: TAGLINE,
+  email: EMAIL,
+  githubUrl: GITHUB_URL,
+  linkedinUrl: LINKEDIN_URL,
+  files: buildFiles(work, projects, {
+    email: EMAIL,
+    githubUrl: GITHUB_URL,
+    linkedinUrl: LINKEDIN_URL,
+  }),
+};
+
+// escape `<` so payload text can never close the script element early
+const payloadJson = JSON.stringify(payload).replaceAll("<", "\\u003c");
+---
+
+<div class="term" id="terminal-island">
+  <p><span class="prompt">$</span> whoami</p>
+  <p>{TAGLINE}</p>
+  <p><span class="prompt">$</span> <span class="cursor"></span></p>
+  <p class="line-hint">
+    # this terminal needs JavaScript — everything here is also on this page
+  </p>
+</div>
+<script
+  type="application/json"
+  id="terminal-payload"
+  is:inline
+  set:html={payloadJson}
+/>
+
+<script>
+  import { initTerminal } from "../lib/terminal/dom";
+  import type { TerminalPayload } from "../lib/terminal/types";
+
+  const root = document.getElementById("terminal-island");
+  const data = document.getElementById("terminal-payload");
+  if (root && data?.textContent) {
+    try {
+      initTerminal(root, JSON.parse(data.textContent) as TerminalPayload);
+    } catch {
+      // spec contract: a failed init must leave the static fallback usable
+    }
+  }
+</script>
+
+<style>
+  /* runtime-created children carry no Astro scope attribute, so
+     everything below .term uses :global() */
+  .term {
+    height: 16rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .term :global(p) {
+    margin: 0;
+  }
+  .term :global(.prompt) {
+    color: var(--color-accent);
+  }
+  .term :global(.line-hint),
+  .line-hint {
+    color: var(--color-text-muted);
+  }
+  .term :global(.line-error) {
+    color: var(--color-text-muted);
+  }
+  .term :global(.line-output),
+  .term :global(.line-echo) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .term :global(.line-pre) {
+    white-space: pre;
+    overflow: hidden;
+    line-height: 1.2;
+  }
+  .term :global(a) {
+    color: var(--color-link);
+  }
+  .term :global(.term-input-row) {
+    display: flex;
+    gap: 0.6ch;
+    align-items: baseline;
+  }
+  .term :global(.term-input) {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    caret-color: var(--color-accent);
+  }
+  .term :global(.term-input:focus:not(:focus-visible)) {
+    outline: none;
+  }
+  .term :global(.cursor),
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    vertical-align: text-bottom;
+    background: var(--color-accent);
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .term :global(.cursor),
+    .cursor {
+      animation: none;
+    }
+  }
+</style>
