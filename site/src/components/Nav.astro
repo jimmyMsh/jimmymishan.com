@@ -1,0 +1,61 @@
+---
+const links = [
+  { href: "/#about", label: "about" },
+  { href: "/#work", label: "work" },
+  { href: "/#projects", label: "projects" },
+  { href: "/resume", label: "resume" },
+  { href: "/#contact", label: "contact" },
+];
+---
+
+<header class="site-header">
+  <nav aria-label="Main">
+    <a class="brand" href="/">jimmy@jimmymishan.com</a>
+    <ul>
+      {links.map((link) => (
+        <li><a href={link.href}>{link.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  nav {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .brand {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    list-style: none;
+    padding: 0;
+    margin-left: auto;
+  }
+  ul a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  ul a:hover {
+    color: var(--color-accent);
+  }
+</style>

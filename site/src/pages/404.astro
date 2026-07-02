@@ -1,0 +1,34 @@
+---
+import TerminalFrame from "../components/TerminalFrame.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404" description="Page not found.">
+  <section>
+    <h1>404 — command not found</h1>
+    <TerminalFrame decorative>
+      <p><span class="prompt">$</span> cat requested-page</p>
+      <p>cat: requested-page: No such file or directory</p>
+    </TerminalFrame>
+    <p class="back"><a href="/">cd ~ (back to the homepage)</a></p>
+  </section>
+</BaseLayout>
+
+<style>
+  section {
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: var(--space-16) var(--space-4);
+  }
+  h1 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-6);
+  }
+  .prompt {
+    color: var(--color-accent);
+  }
+  .back {
+    margin-top: var(--space-6);
+    font-family: var(--font-mono);
+  }
+</style>

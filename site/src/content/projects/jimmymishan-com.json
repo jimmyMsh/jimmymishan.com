@@ -1,0 +1,8 @@
+{
+  "name": "jimmymishan.com",
+  "summary": "[PLACEHOLDER — curate] This site: a static-first Astro portfolio with a live in-page terminal, self-hosted on a 1 GB VPS with full CI/CD.",
+  "tags": ["Astro", "TypeScript", "Docker", "NGINX"],
+  "repo": "https://github.com/jimmyMsh/jimmymishan.com",
+  "link": "https://jimmymishan.com",
+  "order": 1
+}
