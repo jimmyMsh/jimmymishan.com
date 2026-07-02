@@ -6,3 +6,5 @@ export const EMAIL = "jimmymishan2004@gmail.com";
 export const GITHUB_URL = "https://github.com/jimmyMsh";
 export const LINKEDIN_URL = "https://www.linkedin.com/in/jimmymishan/";
 export const RESUME_PATH = "/resume.pdf";
+export const TAGLINE =
+  "production engineer @ meta — I keep systems fast, boring, and online.";
