@@ -88,3 +88,16 @@ test("homepage: hero and all four sections", async ({ page }) => {
     page.locator("section#contact a[href^='mailto:']"),
   ).toBeVisible();
 });
+
+test("resume page embeds and serves the PDF", async ({ page }) => {
+  await page.goto("/resume");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Resume");
+  await expect(
+    page.getByRole("link", { name: /download/i }).first(),
+  ).toHaveAttribute("href", "/resume.pdf");
+
+  const pdf = await page.request.get("/resume.pdf");
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toContain("pdf");
+});

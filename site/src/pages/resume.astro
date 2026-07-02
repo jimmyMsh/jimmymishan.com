@@ -1,0 +1,49 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { RESUME_PATH } from "../lib/meta";
+---
+
+<BaseLayout title="Resume" description="Resume of Jimmy Mishan — Production Engineer at Meta.">
+  <section>
+    <h1>Resume</h1>
+    <p class="stale-note">
+      [PLACEHOLDER — this PDF is from Sept 2024; replace site/public/resume.pdf before cutover]
+    </p>
+    <a class="cta" href={RESUME_PATH} download>Download PDF</a>
+    <object data={RESUME_PATH} type="application/pdf" width="100%" height="800" title="Resume PDF">
+      <p>
+        Your browser can't display PDFs inline — <a href={RESUME_PATH}>download the resume</a>.
+      </p>
+    </object>
+  </section>
+</BaseLayout>
+
+<style>
+  section {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding: var(--space-12) var(--space-4);
+  }
+  h1 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-4);
+  }
+  .stale-note {
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
+  }
+  .cta {
+    display: inline-block;
+    margin-bottom: var(--space-6);
+    padding: var(--space-2) var(--space-6);
+    font-family: var(--font-mono);
+    color: var(--color-bg);
+    background: var(--color-accent);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+  object {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+</style>
