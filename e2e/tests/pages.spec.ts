@@ -101,3 +101,9 @@ test("resume page embeds and serves the PDF", async ({ page }) => {
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toContain("pdf");
 });
+
+test("unknown route returns the 404 page", async ({ page }) => {
+  const response = await page.goto("/definitely-not-a-page");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByText(/command not found/)).toBeVisible();
+});
