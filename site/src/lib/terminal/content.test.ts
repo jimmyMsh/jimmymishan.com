@@ -36,7 +36,7 @@ describe("buildFiles", () => {
   const files = buildFiles(work, projects, meta);
   const byName = new Map(files.map((f) => [f.name, f]));
 
-  it("builds exactly the six spec files", () => {
+  it("builds exactly the six expected virtual files", () => {
     expect([...byName.keys()].sort()).toEqual([
       ".plan",
       "about.txt",
