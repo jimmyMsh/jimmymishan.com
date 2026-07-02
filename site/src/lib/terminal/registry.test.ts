@@ -43,7 +43,7 @@ describe("CommandRegistry", () => {
     expect(reg.completions("s")).toEqual([]);
   });
 
-  it("register replaces a same-named teaser (session-4 seam)", () => {
+  it("register overrides a teaser reserved under the same name", () => {
     const reg = new CommandRegistry({ uptime: "uptime: soon." });
     expect(reg.teaser("uptime")).toBe("uptime: soon.");
     reg.register({ name: "uptime", summary: "", run: () => {} });

@@ -33,7 +33,7 @@ function makeRegistry(): CommandRegistry {
 }
 
 describe("teasers", () => {
-  it("reserves all session-4/5 command names", () => {
+  it("reserves the full set of not-yet-implemented command names", () => {
     expect(Object.keys(TEASERS).sort()).toEqual([
       "deploys",
       "docker",

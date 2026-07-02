@@ -15,7 +15,7 @@ describe("parse", () => {
     expect(parse("  ls   -a ")).toEqual({ cmd: "ls", args: ["-a"] });
   });
 
-  it('groups double-quoted strings (the sign "msg" seam)', () => {
+  it("groups double-quoted strings, e.g. for quoted command arguments", () => {
     expect(parse('sign "hello world"')).toEqual({
       cmd: "sign",
       args: ["hello world"],
