@@ -56,8 +56,12 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     {work.map((entry) => (
       <article class="card">
         <header class="entry-head">
-          {entry.data.logo && (
+          {entry.data.logo ? (
             <Image src={entry.data.logo} alt="" width={48} height={48} class="logo" />
+          ) : (
+            <span class="logo logo-fallback" aria-hidden="true">
+              {entry.data.company.charAt(0)}
+            </span>
           )}
           <div>
             <h3>{entry.data.role}</h3>
@@ -225,6 +229,19 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
   }
   .logo {
     border-radius: var(--radius-sm);
+  }
+  /* keeps header alignment identical for entries without a logo */
+  .logo-fallback {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
   }
   .entry-company {
     color: var(--color-text-muted);
