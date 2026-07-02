@@ -38,4 +38,8 @@
   --content-width: 72rem;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
+
+  /* z-index layers */
+  --z-header: 10;
+  --z-skip-link: 20;
 }

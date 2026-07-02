@@ -1,0 +1,35 @@
+---
+import { EMAIL, GITHUB_URL, LINKEDIN_URL } from "../lib/meta";
+---
+
+<footer>
+  <ul>
+    <li><a href={GITHUB_URL}>GitHub</a></li>
+    <li><a href={LINKEDIN_URL}>LinkedIn</a></li>
+    <li><a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
+  </ul>
+</footer>
+
+<style>
+  footer {
+    border-top: 1px solid var(--color-border);
+    margin-top: var(--space-16);
+  }
+  ul {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    list-style: none;
+    padding: var(--space-6) var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  a {
+    color: var(--color-text-muted);
+  }
+  a:hover {
+    color: var(--color-text);
+  }
+</style>
