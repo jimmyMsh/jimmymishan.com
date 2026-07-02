@@ -48,3 +48,43 @@ test("layout shell: nav, footer, skip link, meta", async ({ page }) => {
     /Production Engineer/,
   );
 });
+
+test("homepage: hero and all four sections", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Jimmy Mishan",
+  );
+  await expect(
+    page.getByText("Production Engineer at Meta").first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /resume/i }).nth(1),
+  ).toBeVisible();
+
+  for (const id of ["about", "work", "projects", "contact"]) {
+    await expect(page.locator(`section#${id}`)).toBeVisible();
+  }
+
+  await expect(page.locator("section#work article")).toHaveCount(4);
+  await expect(
+    page
+      .locator("section#work")
+      .getByText("Production Engineer", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator("section#work").getByText(/Jun 2024 – Sep 2024/),
+  ).toBeVisible();
+
+  await expect(page.locator("section#projects article")).toHaveCount(2);
+  await expect(
+    page
+      .locator("section#projects")
+      .getByRole("link", { name: /github/i })
+      .first(),
+  ).toBeVisible();
+
+  await expect(
+    page.locator("section#contact a[href^='mailto:']"),
+  ).toBeVisible();
+});

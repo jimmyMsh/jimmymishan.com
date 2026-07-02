@@ -1,9 +1,283 @@
 ---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import profile from "../assets/img/profile.jpg";
+import TerminalFrame from "../components/TerminalFrame.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { SITE_DESCRIPTION, SITE_TITLE } from "../lib/meta";
+import { formatRange } from "../lib/dates";
+import { EMAIL, GITHUB_URL, LINKEDIN_URL, ROLE, SITE_DESCRIPTION, SITE_TITLE } from "../lib/meta";
+
+const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.order);
+const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
 ---
 
 <BaseLayout description={SITE_DESCRIPTION}>
-  <h1>{SITE_TITLE}</h1>
-  <p>New site under construction.</p>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>{SITE_TITLE}</h1>
+      <p class="role">{ROLE}</p>
+      <p class="tagline">
+        I keep production systems fast, boring, and online — this site runs on a server you can
+        watch live.
+      </p>
+      <a class="cta" href="/resume">View resume</a>
+    </div>
+    <TerminalFrame decorative>
+      <p><span class="prompt">$</span> whoami</p>
+      <p>production engineer @ meta — I keep systems fast, boring, and online.</p>
+      <p><span class="prompt">$</span> <span class="cursor"></span></p>
+      <p class="hint"># the interactive terminal comes online soon — type `help` when it does</p>
+    </TerminalFrame>
+  </section>
+
+  <section id="about" aria-labelledby="about-title">
+    <h2 id="about-title"><span class="section-prompt">$</span> cat about.md</h2>
+    <div class="about-grid">
+      <Image src={profile} alt="Jimmy Mishan" width={220} densities={[1, 2]} class="portrait" />
+      <div>
+        <p>
+          I'm a production engineer at Meta [PLACEHOLDER — one sentence on your actual team and
+          what it owns]. I care about systems that stay up quietly: good observability, boring
+          deploys, and infrastructure that fits on exactly as much hardware as it needs — like
+          this site, which runs on a 1&nbsp;GB VPS you can inspect from the browser.
+        </p>
+        <p>
+          I studied at Rutgers University (BA in Computer Science and Information Technology &amp;
+          Informatics). Outside of work I lift — I hit the gym most days and used to train clients
+          professionally — hunt down good food around NYC, and build things: computers, servers,
+          and the occasional side project.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="work" aria-labelledby="work-title">
+    <h2 id="work-title"><span class="section-prompt">$</span> ls work/</h2>
+    {work.map((entry) => (
+      <article class="card">
+        <header class="entry-head">
+          {entry.data.logo && (
+            <Image src={entry.data.logo} alt="" width={48} height={48} class="logo" />
+          )}
+          <div>
+            <h3>{entry.data.role}</h3>
+            <p class="entry-company">{entry.data.company}</p>
+            <p class="entry-dates">{formatRange(entry.data.start, entry.data.end)}</p>
+          </div>
+        </header>
+        <p class="entry-summary">{entry.data.summary}</p>
+        <ul>
+          {entry.data.highlights.map((highlight) => (
+            <li>{highlight}</li>
+          ))}
+        </ul>
+        {entry.data.link && <a href={entry.data.link}>Learn more about {entry.data.company}</a>}
+      </article>
+    ))}
+  </section>
+
+  <section id="projects" aria-labelledby="projects-title">
+    <h2 id="projects-title"><span class="section-prompt">$</span> ls projects/</h2>
+    <div class="project-grid">
+      {projects.map((project) => (
+        <article class="card">
+          <h3>{project.data.name}</h3>
+          <p>{project.data.summary}</p>
+          {project.data.tags && (
+            <ul class="tags">
+              {project.data.tags.map((tag) => (
+                <li>{tag}</li>
+              ))}
+            </ul>
+          )}
+          <p class="project-links">
+            {project.data.repo && <a href={project.data.repo}>GitHub</a>}
+            {project.data.link && <a href={project.data.link}>Live</a>}
+          </p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section id="contact" aria-labelledby="contact-title">
+    <h2 id="contact-title"><span class="section-prompt">$</span> contact --list</h2>
+    <p>The fastest way to reach me is email. I read everything.</p>
+    <ul class="contact-list">
+      <li><a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
+      <li><a href={GITHUB_URL}>github.com/jimmyMsh</a></li>
+      <li><a href={LINKEDIN_URL}>linkedin.com/in/jimmymishan</a></li>
+    </ul>
+  </section>
 </BaseLayout>
+
+<style>
+  section {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding: var(--space-12) var(--space-4);
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-8);
+  }
+  .section-prompt {
+    color: var(--color-accent);
+  }
+
+  /* hero */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+    align-items: center;
+    padding-top: var(--space-16);
+  }
+  @media (max-width: 56rem) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+  }
+  .hero h1 {
+    font-size: var(--text-3xl);
+  }
+  .role {
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    color: var(--color-accent);
+    margin-top: var(--space-2);
+  }
+  .tagline {
+    color: var(--color-text-muted);
+    margin-top: var(--space-4);
+    max-width: 36ch;
+  }
+  .cta {
+    display: inline-block;
+    margin-top: var(--space-6);
+    padding: var(--space-2) var(--space-6);
+    font-family: var(--font-mono);
+    color: var(--color-bg);
+    background: var(--color-accent);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+  .prompt {
+    color: var(--color-accent);
+  }
+  .hint {
+    color: var(--color-text-muted);
+  }
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    vertical-align: text-bottom;
+    background: var(--color-accent);
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor {
+      animation: none;
+    }
+  }
+
+  /* about */
+  .about-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-8);
+    align-items: start;
+  }
+  @media (max-width: 40rem) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .portrait {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+  }
+  .about-grid p + p {
+    margin-top: var(--space-4);
+  }
+
+  /* cards (work + projects) */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+  }
+  #work .card + .card {
+    margin-top: var(--space-6);
+  }
+  .entry-head {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    margin-bottom: var(--space-4);
+  }
+  .logo {
+    border-radius: var(--radius-sm);
+  }
+  .entry-company {
+    color: var(--color-text-muted);
+  }
+  .entry-dates {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .entry-summary {
+    margin-bottom: var(--space-4);
+  }
+  .card ul {
+    padding-left: var(--space-6);
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  /* projects */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: var(--space-6);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    padding: 0;
+    margin-top: var(--space-4);
+  }
+  .tags li {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-2);
+  }
+  .project-links {
+    margin-top: var(--space-4);
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  /* contact */
+  .contact-list {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--space-6);
+    display: grid;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+  }
+</style>
