@@ -1,0 +1,41 @@
+/* The only file where raw values live. Components consume var(--…) only.
+   Palette is GitHub-dark family; all text/bg pairs meet WCAG AA (see spec). */
+:root {
+  /* color */
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-border: #30363d;
+  --color-text: #e6edf3;
+  --color-text-muted: #8b949e;
+  --color-accent: #3fb950; /* green: prompts, accents, live data ONLY */
+  --color-link: #58a6ff;
+
+  /* type */
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: 1.9531rem;
+  --text-3xl: 2.4414rem;
+
+  /* space (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  /* layout */
+  --content-width: 72rem;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
