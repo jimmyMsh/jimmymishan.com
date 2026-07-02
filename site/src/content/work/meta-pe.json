@@ -1,0 +1,13 @@
+{
+  "role": "Production Engineer",
+  "company": "Meta",
+  "start": "[PLACEHOLDER — start month as YYYY-MM]",
+  "end": null,
+  "summary": "[PLACEHOLDER — one-line, quantified summary of the PE role: what you own, at what scale]",
+  "highlights": [
+    "[PLACEHOLDER — impact bullet: scale / scope / outcome]",
+    "[PLACEHOLDER — impact bullet: scale / scope / outcome]"
+  ],
+  "link": "https://about.meta.com/",
+  "order": 1
+}

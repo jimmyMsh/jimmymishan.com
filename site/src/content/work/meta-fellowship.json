@@ -1,0 +1,17 @@
+{
+  "role": "Production Engineering Fellow",
+  "company": "Meta (via MLH)",
+  "start": "2024-06",
+  "end": "2024-09",
+  "summary": "Deployed and operated a containerized multi-service web app with 99% uptime, cutting deploy times in half.",
+  "highlights": [
+    "Collaborated with a team to engineer and deploy a multi-component web application on DigitalOcean, achieving 99% uptime and improving response times.",
+    "Engineered a containerized microservices architecture using Docker, separating Flask, MySQL, and NGINX components, resulting in 50% faster deployments and 35% improved resource utilization.",
+    "Implemented and optimized CI/CD pipelines with GitHub Actions, reducing production bugs by 25% and accelerating deployment cycles by 50%.",
+    "Developed and executed comprehensive testing strategies, including unit, integration, and system testing, increasing code coverage to 75% and significantly reducing post-deployment issues.",
+    "Designed and implemented custom monitoring solutions for server health using Prometheus and Grafana, improving incident response time by 50% and enhancing system observability"
+  ],
+  "link": "https://fellowship.mlh.io/",
+  "logo": "../../assets/img/meta-fellowship.jpg",
+  "order": 3
+}

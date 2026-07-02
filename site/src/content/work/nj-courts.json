@@ -1,0 +1,17 @@
+{
+  "role": "Software Engineering Intern",
+  "company": "New Jersey Courts (Supreme Court of NJ)",
+  "start": "2024-06",
+  "end": "[PLACEHOLDER — real end month as YYYY-MM]",
+  "summary": "Automated attendance-data processing and built a mobile attendance app used across 20+ annual events for the NJ judiciary.",
+  "highlights": [
+    "Led the development of a Node.js application to automate the processing of attendance data from CSV and JSON files, reducing manual data entry time by an estimated 80% and improving data accuracy.",
+    "Implemented error handling and data validation in the automatic processing of attendance data, reducing manual data correction time by approximately 50%.",
+    "Architected and developed an Android mobile attendance application using Ionic and Angular, designed to replace legacy hardware solutions and streamline event management processes for 20+ events annually.",
+    "Managed API testing using Postman, ensuring that secure endpoints were correctly configured and tested, leading to a 100% success rate in API integration with the judiciary's PEGA database.",
+    "Actively participated in SCRUM development processes, contributing to sprint planning and retrospectives for 6+ concurrent projects"
+  ],
+  "link": "https://www.njcourts.gov/",
+  "logo": "../../assets/img/nj-courts.jpg",
+  "order": 2
+}
