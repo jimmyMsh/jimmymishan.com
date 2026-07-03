@@ -1,4 +1,4 @@
-export type SseEventName = "metrics" | "presence" | "deploy";
+export type SseEventName = "metrics" | "presence" | "deploy" | "log";
 
 export interface SseClient {
   send(event: string, data: string): void;
