@@ -1,6 +1,7 @@
 import { autoplayScript, finalLines } from "./autoplay";
 import { createCommands, OPEN_TARGET_NAMES } from "./commands";
 import { flavorCommands, TEASERS } from "./flavor";
+import { registerLiveCommands } from "./live";
 import { CommandRegistry, execute } from "./registry";
 import type { Line, TerminalPayload, Writer } from "./types";
 import { hint, text } from "./types";
@@ -17,6 +18,7 @@ export function initTerminal(
   const registry = new CommandRegistry(TEASERS);
   for (const cmd of createCommands(registry, payload)) registry.register(cmd);
   for (const cmd of flavorCommands()) registry.register(cmd);
+  registerLiveCommands(registry);
 
   const reducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
