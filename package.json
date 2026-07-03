@@ -13,6 +13,7 @@
     "check": "biome ci . && npm run -w site check && npm run -w api check",
     "test": "npm run -w site test && npm run -w api test",
     "build": "npm run -w site build && npm run -w api build",
+    "size": "node scripts/check-bundle-size.mjs",
     "e2e": "npm run -w e2e test"
   },
   "overrides": {
