@@ -10,6 +10,11 @@ describe("loadConfig", () => {
       sseMaxConnections: 100,
       commit: "dev",
       dataDir: "/data",
+      guestbookEnabled: true,
+      contactDiscordWebhook: null,
+      logTailEnabled: true,
+      logTailAllowPrivate: false,
+      writeSecret: null,
     });
   });
 
@@ -50,5 +55,67 @@ describe("loadConfig", () => {
   it("accepts an SSE_MAX_CONNECTIONS within range", () => {
     const config = loadConfig({ SSE_MAX_CONNECTIONS: "250" });
     expect(config.sseMaxConnections).toBe(250);
+  });
+
+  it("rejects a non-boolean GUESTBOOK_ENABLED, naming the var", () => {
+    expect(() => loadConfig({ GUESTBOOK_ENABLED: "yes" })).toThrow(
+      /GUESTBOOK_ENABLED/,
+    );
+  });
+
+  it("parses GUESTBOOK_ENABLED=false as false", () => {
+    const config = loadConfig({ GUESTBOOK_ENABLED: "false" });
+    expect(config.guestbookEnabled).toBe(false);
+  });
+
+  it("parses GUESTBOOK_ENABLED=true as true", () => {
+    const config = loadConfig({ GUESTBOOK_ENABLED: "true" });
+    expect(config.guestbookEnabled).toBe(true);
+  });
+
+  it("carries a set CONTACT_DISCORD_WEBHOOK through", () => {
+    const config = loadConfig({
+      CONTACT_DISCORD_WEBHOOK: "https://discord.com/api/webhooks/x/y",
+    });
+    expect(config.contactDiscordWebhook).toBe(
+      "https://discord.com/api/webhooks/x/y",
+    );
+  });
+
+  it("treats an empty CONTACT_DISCORD_WEBHOOK as unset", () => {
+    const config = loadConfig({ CONTACT_DISCORD_WEBHOOK: "" });
+    expect(config.contactDiscordWebhook).toBeNull();
+  });
+
+  it("rejects a non-boolean LOG_TAIL_ENABLED, naming the var", () => {
+    expect(() => loadConfig({ LOG_TAIL_ENABLED: "nope" })).toThrow(
+      /LOG_TAIL_ENABLED/,
+    );
+  });
+
+  it("parses LOG_TAIL_ENABLED=false as false", () => {
+    const config = loadConfig({ LOG_TAIL_ENABLED: "false" });
+    expect(config.logTailEnabled).toBe(false);
+  });
+
+  it("rejects a non-boolean LOG_TAIL_ALLOW_PRIVATE, naming the var", () => {
+    expect(() => loadConfig({ LOG_TAIL_ALLOW_PRIVATE: "nope" })).toThrow(
+      /LOG_TAIL_ALLOW_PRIVATE/,
+    );
+  });
+
+  it("parses LOG_TAIL_ALLOW_PRIVATE=true as true", () => {
+    const config = loadConfig({ LOG_TAIL_ALLOW_PRIVATE: "true" });
+    expect(config.logTailAllowPrivate).toBe(true);
+  });
+
+  it("treats an empty WRITE_SECRET as unset", () => {
+    const config = loadConfig({ WRITE_SECRET: "" });
+    expect(config.writeSecret).toBeNull();
+  });
+
+  it("carries a set WRITE_SECRET through", () => {
+    const config = loadConfig({ WRITE_SECRET: "shh-write" });
+    expect(config.writeSecret).toBe("shh-write");
   });
 });
