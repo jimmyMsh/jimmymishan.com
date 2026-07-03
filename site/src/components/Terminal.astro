@@ -64,9 +64,12 @@ const payloadJson = JSON.stringify(payload).replaceAll("<", "\\u003c");
   const data = document.getElementById("terminal-payload");
   if (root && data?.textContent) {
     try {
-      initTerminal(root, JSON.parse(data.textContent) as TerminalPayload);
+      const payload = JSON.parse(data.textContent) as TerminalPayload;
+      // init builds the subtree fully before swapping it in, so a rejected
+      // prefetch or build step leaves the static markup above intact
+      void initTerminal(root, payload).catch(() => {});
     } catch {
-      // the static markup above must stay usable if init throws
+      // malformed payload JSON — keep the static markup usable
     }
   }
 </script>

@@ -1,0 +1,323 @@
+---
+// Static shell for /status. Renders meaningfully with JS off (headings + a
+// "needs JavaScript" note); the island below fills in live values.
+---
+
+<section class="dash" id="status-dash" aria-labelledby="status-title">
+  <header class="dash-head">
+    <h1 id="status-title"><span class="prompt">$</span> systemctl status jimmymishan.com</h1>
+    <p class="presence"><span id="st-presence">—</span> viewing now</p>
+  </header>
+
+  <p class="js-note" id="st-js-note">
+    live data needs JavaScript — this page streams metrics from the server.
+  </p>
+
+  <div class="panel error" id="st-error" hidden>
+    can't reach the API — retrying every 30s.
+  </div>
+
+  <p class="polling-note" id="st-polling" hidden>
+    live stream unavailable — polling every 10s.
+  </p>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>CPU</h2>
+      <svg
+        class="spark"
+        id="st-cpu-svg"
+        viewBox="0 0 300 60"
+        role="img"
+        aria-label="CPU usage"
+        preserveAspectRatio="none"
+      >
+        <line class="spark-axis" x1="0" y1="59.5" x2="300" y2="59.5"></line>
+        <path class="spark-line" id="st-cpu-path" d="" vector-effect="non-scaling-stroke"></path>
+      </svg>
+      <p class="metric"><span id="st-cpu-val">—</span></p>
+    </div>
+
+    <div class="panel">
+      <h2>Memory</h2>
+      <svg
+        class="spark"
+        id="st-mem-svg"
+        viewBox="0 0 300 60"
+        role="img"
+        aria-label="Memory usage"
+        preserveAspectRatio="none"
+      >
+        <line class="spark-axis" x1="0" y1="59.5" x2="300" y2="59.5"></line>
+        <path class="spark-line" id="st-mem-path" d="" vector-effect="non-scaling-stroke"></path>
+      </svg>
+      <p class="metric"><span id="st-mem-val">—</span></p>
+    </div>
+
+    <div class="panel">
+      <h2>Latency</h2>
+      <svg
+        class="spark"
+        id="st-lat-svg"
+        viewBox="0 0 300 60"
+        role="img"
+        aria-label="Request latency"
+        preserveAspectRatio="none"
+      >
+        <line class="spark-axis" x1="0" y1="59.5" x2="300" y2="59.5"></line>
+        <path class="spark-line" id="st-lat-path" d="" vector-effect="non-scaling-stroke"></path>
+      </svg>
+      <p class="metric"><span id="st-lat-val">—</span></p>
+    </div>
+
+    <div class="panel">
+      <h2>Host</h2>
+      <dl class="kv">
+        <div><dt>load</dt><dd id="st-load">—</dd></div>
+        <div><dt>uptime</dt><dd id="st-uptime">—</dd></div>
+        <div><dt>commit</dt><dd id="st-commit">—</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Uptime <span class="muted">· last 90 days</span></h2>
+    <div class="bars" id="st-bars" role="img" aria-label="90-day uptime history"></div>
+    <p class="metric" id="st-slo">—</p>
+  </div>
+
+  <div class="panel">
+    <h2>Containers</h2>
+    <table class="containers">
+      <thead>
+        <tr><th>name</th><th>status</th><th>cpu</th><th>mem</th></tr>
+      </thead>
+      <tbody id="st-containers">
+        <tr><td colspan="4" class="muted">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Deploys</h2>
+    <div class="deploy-banner" id="st-deploy-banner" hidden></div>
+    <ul class="feed" id="st-feed">
+      <li class="muted">—</li>
+    </ul>
+  </div>
+</section>
+
+<script>
+  import { initStatusDashboard } from "../lib/status/island";
+
+  const root = document.getElementById("status-dash");
+  if (root) {
+    try {
+      // init only touches elements inside the shell; a throw leaves the static
+      // markup (headings + the JS-needed note) on screen unchanged
+      initStatusDashboard(root);
+    } catch {
+      // keep the static shell usable
+    }
+  }
+</script>
+
+<style>
+  .dash {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding: var(--space-12) var(--space-4);
+    display: grid;
+    gap: var(--space-6);
+  }
+  .dash-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  h1 {
+    font-family: var(--font-mono);
+    font-size: var(--text-xl);
+  }
+  .prompt {
+    color: var(--color-accent);
+  }
+  .presence {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .presence #st-presence {
+    color: var(--color-accent);
+  }
+  .js-note,
+  .polling-note {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--space-6);
+  }
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+  }
+  .panel h2 {
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
+    font-weight: normal;
+  }
+  .panel.error {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .muted {
+    color: var(--color-text-muted);
+  }
+
+  .spark {
+    display: block;
+    width: 100%;
+    height: 3.5rem;
+  }
+  .spark-line {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+  }
+  .spark-axis {
+    stroke: var(--color-border);
+    stroke-width: 1;
+  }
+  .metric {
+    margin-top: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    color: var(--color-text);
+  }
+
+  .kv {
+    display: grid;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    margin: 0;
+  }
+  .kv > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .kv dt {
+    color: var(--color-text-muted);
+  }
+  .kv dd {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  .bars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .bar {
+    flex: 1 0 0.4rem;
+    min-width: 0.2rem;
+    height: 2.25rem;
+    border-radius: 1px;
+    background: var(--color-border);
+  }
+  .bar-ok {
+    background: var(--color-accent);
+  }
+  .bar-warn {
+    background: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  }
+  .bar-bad {
+    background: color-mix(in srgb, var(--color-accent) 20%, var(--color-border));
+  }
+  .bar-none {
+    background: var(--color-border);
+  }
+
+  .containers {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .containers th {
+    text-align: left;
+    color: var(--color-text-muted);
+    font-weight: normal;
+    padding-bottom: var(--space-2);
+  }
+  .containers td {
+    padding: var(--space-1) 0;
+  }
+  .containers td.up {
+    color: var(--color-accent);
+  }
+  .containers td.down {
+    color: var(--color-text-muted);
+  }
+
+  .deploy-banner {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .deploy-banner.flash {
+    animation: deploy-flash 1.2s ease-out;
+  }
+  @keyframes deploy-flash {
+    0% {
+      background: var(--color-accent);
+      color: var(--color-bg);
+    }
+    100% {
+      background: transparent;
+      color: var(--color-accent);
+    }
+  }
+  .feed {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .feed .sha {
+    color: var(--color-text);
+  }
+  .feed .dep-ok {
+    color: var(--color-accent);
+  }
+  .feed .dep-bad {
+    color: var(--color-text-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .deploy-banner.flash {
+      animation: none;
+    }
+  }
+</style>

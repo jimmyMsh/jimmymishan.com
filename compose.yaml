@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: docker/site.Dockerfile
       target: local
+    cgroup_parent: nginx
     ports:
       - "8080:80"
       - "8443:443"
@@ -19,8 +20,10 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
+    cgroup_parent: api
     volumes:
       - ./data:/data
+      - /sys/fs/cgroup:/host/cgroup:ro
     logging:
       driver: json-file
       options:

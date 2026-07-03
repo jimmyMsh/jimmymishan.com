@@ -81,7 +81,6 @@ export function createCommands(
     {
       name: "cat",
       summary: "print a file",
-      usage: "cat <file>",
       run(ctx, args) {
         const name = args[0];
         if (name === undefined) {
@@ -104,7 +103,6 @@ export function createCommands(
     {
       name: "open",
       summary: "go somewhere (open <target>)",
-      usage: "open <target>",
       run(ctx, args) {
         const name = args[0];
         if (name === undefined) {

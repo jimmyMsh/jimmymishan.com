@@ -67,8 +67,53 @@ test("arrow-up recalls history", async ({ page }) => {
 
 test("future commands answer with the honest teaser", async ({ page }) => {
   await openTerminal(page);
-  await run(page, "uptime");
-  await expect(page.getByText(/uptime: not wired up yet/)).toBeVisible();
+  await run(page, "tail");
+  await expect(page.getByText(/tail: not wired up yet/)).toBeVisible();
+});
+
+test("Tab completes commands and cat/open arguments", async ({ page }) => {
+  await openTerminal(page);
+  const input = page.getByLabel("terminal input");
+
+  await input.fill("up");
+  await input.press("Tab");
+  await expect(input).toHaveValue("uptime ");
+
+  await input.fill("cat ab");
+  await input.press("Tab");
+  await expect(input).toHaveValue("cat about.txt ");
+
+  await input.fill("open re");
+  await input.press("Tab");
+  await expect(input).toHaveValue("open resume ");
+});
+
+test("Ctrl+C aborts sl mid-animation and the prompt stays alive", async ({
+  page,
+}) => {
+  await openTerminal(page);
+  await run(page, "sl");
+  // the locomotive is on screen (distinctive glyphs survive every frame)
+  await expect(page.getByText(/\[\]\[\]/).first()).toBeVisible();
+
+  await page.getByLabel("terminal input").press("Control+c");
+  await expect(page.getByText("^C")).toBeVisible();
+
+  await run(page, "whoami");
+  await expect(page.getByText(TAGLINE).last()).toBeVisible();
+});
+
+test("Ctrl+L clears the screen and the prompt keeps working", async ({
+  page,
+}) => {
+  await openTerminal(page);
+  await expect(page.getByText(HINT)).toBeVisible();
+
+  await page.getByLabel("terminal input").press("Control+l");
+  await expect(page.getByText(HINT)).toHaveCount(0);
+
+  await run(page, "pwd");
+  await expect(page.getByText("/home/jimmy")).toBeVisible();
 });
 
 test.describe("reduced motion", () => {

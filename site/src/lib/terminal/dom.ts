@@ -1,6 +1,7 @@
 import { autoplayScript, finalLines } from "./autoplay";
 import { createCommands, OPEN_TARGET_NAMES } from "./commands";
 import { flavorCommands, TEASERS } from "./flavor";
+import { prefetchStatus, registerLiveCommands } from "./live";
 import { CommandRegistry, execute } from "./registry";
 import type { Line, TerminalPayload, Writer } from "./types";
 import { hint, text } from "./types";
@@ -9,20 +10,25 @@ import { createVfs } from "./vfs";
 const MAX_LINES = 500;
 const TYPE_MS = 55;
 
-export function initTerminal(
+export async function initTerminal(
   root: HTMLElement,
   payload: TerminalPayload,
-): void {
+): Promise<void> {
+  // Fetch the live snapshot before any DOM work. A value that resolves within
+  // the prefetch budget adds the autoplay live step; a null/timed-out one omits
+  // it. Static hero markup stays on screen for the (brief) wait.
+  const live = await prefetchStatus(800);
+
   const vfs = createVfs(payload.files);
   const registry = new CommandRegistry(TEASERS);
   for (const cmd of createCommands(registry, payload)) registry.register(cmd);
   for (const cmd of flavorCommands()) registry.register(cmd);
+  registerLiveCommands(registry);
 
   const reducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
 
-  root.replaceChildren();
   const output = document.createElement("div");
   output.className = "term-output";
   output.setAttribute("role", "log");
@@ -41,7 +47,6 @@ export function initTerminal(
   input.autocapitalize = "off";
   input.spellcheck = false;
   inputRow.append(promptSpan, input);
-  root.append(output, inputRow);
 
   function renderLine(line: Line): HTMLParagraphElement {
     const p = document.createElement("p");
@@ -69,17 +74,26 @@ export function initTerminal(
     return p;
   }
 
+  // Completed lines land in the role=log region and announce once; animation
+  // frames (sl/top via replaceLast) are marked aria-hidden so their per-frame
+  // churn is never announced.
+  function appendLine(line: Line, animating: boolean): void {
+    const p = renderLine(line);
+    if (animating) p.setAttribute("aria-hidden", "true");
+    output.append(p);
+    while (output.childElementCount > MAX_LINES) {
+      output.firstElementChild?.remove();
+    }
+    root.scrollTop = root.scrollHeight;
+  }
+
   const writer: Writer = {
     writeLine(line) {
-      output.append(renderLine(line));
-      while (output.childElementCount > MAX_LINES) {
-        output.firstElementChild?.remove();
-      }
-      root.scrollTop = root.scrollHeight;
+      appendLine(line, false);
     },
     replaceLast(count, lines) {
       for (let i = 0; i < count; i++) output.lastElementChild?.remove();
-      for (const line of lines) this.writeLine(line);
+      for (const line of lines) appendLine(line, true);
     },
     clear() {
       output.replaceChildren();
@@ -109,13 +123,16 @@ export function initTerminal(
   }
 
   // --- autoplay ---
-  const steps = autoplayScript(payload.tagline);
+  const steps = autoplayScript(payload.tagline, live);
   let autoplayDone = false;
   let skipAutoplay: (() => void) | null = null;
 
   function finishAutoplay(): void {
     if (autoplayDone) return;
     autoplayDone = true;
+    // Reveal the finished transcript to assistive tech; the animated intro above
+    // ran while `output` was aria-hidden, so nothing was announced per-char.
+    output.removeAttribute("aria-hidden");
     writer.clear();
     for (const line of finalLines(steps)) writer.writeLine(line);
     inputRow.hidden = false;
@@ -166,21 +183,6 @@ export function initTerminal(
     finishAutoplay();
   }
 
-  if (reducedMotion) finishAutoplay();
-  else void playAutoplay();
-
-  // --- interaction ---
-  root.addEventListener("pointerdown", (event) => {
-    if (!autoplayDone) {
-      skipAutoplay?.();
-      finishAutoplay();
-    }
-    if (event.target instanceof HTMLAnchorElement) return;
-    if (window.getSelection()?.toString()) return;
-    // wait a tick so the browser doesn't move focus back on click
-    requestAnimationFrame(() => input.focus({ preventScroll: true }));
-  });
-
   function complete(): void {
     const value = input.value;
     const parts = value.split(/\s+/);
@@ -216,6 +218,22 @@ export function initTerminal(
     });
   }
 
+  // --- mount: the last operation that touches the root, so a failure in any of
+  // the build steps above leaves the static hero markup untouched. ---
+  root.replaceChildren(output, inputRow);
+
+  // --- interaction ---
+  root.addEventListener("pointerdown", (event) => {
+    if (!autoplayDone) {
+      skipAutoplay?.();
+      finishAutoplay();
+    }
+    if (event.target instanceof HTMLAnchorElement) return;
+    if (window.getSelection()?.toString()) return;
+    // wait a tick so the browser doesn't move focus back on click
+    requestAnimationFrame(() => input.focus({ preventScroll: true }));
+  });
+
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -245,4 +263,13 @@ export function initTerminal(
       writer.clear();
     }
   });
+
+  if (reducedMotion) {
+    finishAutoplay();
+  } else {
+    // Hide the entire animated intro from assistive tech; finishAutoplay reveals
+    // the completed transcript and announces it once.
+    output.setAttribute("aria-hidden", "true");
+    void playAutoplay();
+  }
 }
