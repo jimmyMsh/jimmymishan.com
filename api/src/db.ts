@@ -26,6 +26,20 @@ CREATE TABLE IF NOT EXISTS daily (
   p99_ms INTEGER
 )`;
 
+const GUESTBOOK_SCHEMA = `
+CREATE TABLE IF NOT EXISTS entries (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  message TEXT NOT NULL,
+  ts INTEGER NOT NULL,
+  ip_hash TEXT NOT NULL,
+  hidden INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS blocklist (
+  ip_hash TEXT PRIMARY KEY,
+  ts INTEGER NOT NULL
+)`;
+
 // WAL needs a file to keep its companion -wal/-shm files in; :memory: databases
 // have no file and silently ignore the pragma.
 function enableWalIfFileBacked(db: DatabaseSync, path: string): void {
@@ -44,5 +58,12 @@ export function openSloDb(path: string): DatabaseSync {
   const db = new DatabaseSync(path);
   enableWalIfFileBacked(db, path);
   db.exec(SLO_SCHEMA);
+  return db;
+}
+
+export function openGuestbookDb(path: string): DatabaseSync {
+  const db = new DatabaseSync(path);
+  enableWalIfFileBacked(db, path);
+  db.exec(GUESTBOOK_SCHEMA);
   return db;
 }
