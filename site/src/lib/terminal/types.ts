@@ -61,8 +61,6 @@ export interface Command {
   name: string;
   /** one-liner shown by help */
   summary: string;
-  /** shown on missing/invalid arguments, e.g. "cat <file>" */
-  usage?: string;
   /** hidden: not in help, not tab-completed */
   hidden?: boolean;
   run(ctx: CommandContext, args: string[]): void | Promise<void>;
