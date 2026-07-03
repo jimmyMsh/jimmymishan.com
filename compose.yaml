@@ -21,6 +21,8 @@ services:
       context: .
       dockerfile: docker/api.Dockerfile
     cgroup_parent: api
+    environment:
+      - LOG_TAIL_ALLOW_PRIVATE=true
     volumes:
       - ./data:/data
       - /sys/fs/cgroup:/host/cgroup:ro
