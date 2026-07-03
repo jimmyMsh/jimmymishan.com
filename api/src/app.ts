@@ -1,13 +1,57 @@
 import { Hono } from "hono";
+import type { GithubCache } from "./github.js";
+import { deploysRoutes } from "./routes/deploys.js";
+import { eventsRoute } from "./routes/events.js";
+import { githubRoute } from "./routes/github.js";
+import type { RequestCounter } from "./routes/metrics.js";
+import { metricsRoute } from "./routes/metrics.js";
+import type { StatusDeps } from "./routes/status.js";
+import { statusRoute } from "./routes/status.js";
+import type { SloProber } from "./slo/probe.js";
 
-const startedAt = Date.now();
+export interface AppDeps extends StatusDeps {
+  latestMetrics: () => unknown | null;
+  github: GithubCache;
+  requests: RequestCounter;
+  prober: SloProber;
+  deploysTotal: () => number;
+}
 
-export const app = new Hono();
+export function buildApp(deps: AppDeps): Hono {
+  const app = new Hono();
 
-app.get("/api/healthz", (c) =>
-  c.json({
-    status: "ok",
-    uptime_s: Math.round((Date.now() - startedAt) / 1000),
-    commit: process.env.COMMIT ?? "dev",
-  }),
-);
+  // Registered before the routes so it wraps every matched handler; the
+  // counter reads the route pattern via routePath, which only resolves once
+  // a route has matched further down the chain.
+  app.use(deps.requests.middleware());
+
+  app.get("/api/healthz", (c) =>
+    c.json({
+      status: "ok",
+      uptime_s: Math.round(
+        ((deps.now?.() ?? Date.now()) - deps.startedAt) / 1000,
+      ),
+      commit: deps.config.commit,
+    }),
+  );
+
+  app.route("/", statusRoute(deps));
+  app.route(
+    "/",
+    eventsRoute({ hub: deps.hub, latestMetrics: deps.latestMetrics }),
+  );
+  app.route("/", githubRoute({ cache: deps.github }));
+  // deploysRoutes owns its own unix-seconds clock; AppDeps.now is milliseconds
+  // (Date.now) for the status/metrics blocks, so it must not be forwarded here.
+  app.route(
+    "/",
+    deploysRoutes({
+      db: deps.deploysDb,
+      secret: deps.config.deployWebhookSecret,
+      hub: deps.hub,
+    }),
+  );
+  app.route("/", metricsRoute(deps));
+
+  return app;
+}

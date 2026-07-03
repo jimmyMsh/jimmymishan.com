@@ -104,9 +104,46 @@ jobs:
         run: |
           sleep 10
           curl -fsS https://jimmymishan.com/api/healthz
+      # Records the deploy in the API's feed. Signs {sha, tag, status, actor, ts}
+      # (ts in unix seconds) with an HMAC-SHA256 over the exact request body and
+      # sends it as X-Deploy-Signature: sha256=<hex>, matching the verification
+      # in the /api/deploys/webhook route. Requires the DEPLOY_WEBHOOK_SECRET
+      # repository secret (the same HMAC key the API is configured with).
+      - name: Record deploy
+        if: success()
+        env:
+          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+          SHA: ${{ github.sha }}
+          TAG: ${{ inputs.tag || github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          TS=$(date +%s)
+          BODY=$(printf '{"sha":"%s","tag":"%s","status":"ok","actor":"%s","ts":%s}' "$SHA" "$TAG" "$ACTOR" "$TS")
+          SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$DEPLOY_WEBHOOK_SECRET" | awk '{print $NF}')
+          curl -sS -X POST https://jimmymishan.com/api/deploys/webhook \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Signature: sha256=$SIG" \
+            --data "$BODY" || true
       - name: Notify success
         if: success()
         run: 'curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" -d "content=🚀 Deployed ${{ inputs.tag || github.sha }}"'
       - name: Notify failure
         if: failure()
         run: 'curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" -d "content=🚨 Deploy failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"'
+      # Best-effort: record the failure in the API's feed on any failed step.
+      # Uses the same DEPLOY_WEBHOOK_SECRET-signed scheme; never fails the job.
+      - name: Record failed deploy
+        if: failure()
+        env:
+          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+          SHA: ${{ github.sha }}
+          TAG: ${{ inputs.tag || github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          TS=$(date +%s)
+          BODY=$(printf '{"sha":"%s","tag":"%s","status":"failed","actor":"%s","ts":%s}' "$SHA" "$TAG" "$ACTOR" "$TS")
+          SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$DEPLOY_WEBHOOK_SECRET" | awk '{print $NF}')
+          curl -sS -X POST https://jimmymishan.com/api/deploys/webhook \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Signature: sha256=$SIG" \
+            --data "$BODY" || true
