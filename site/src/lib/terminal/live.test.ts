@@ -152,16 +152,21 @@ describe("formatters", () => {
 });
 
 describe("registerLiveCommands", () => {
-  it("registers the five live commands and leaves top's teaser reserved", () => {
+  it("registers all six live commands, replacing every teaser", () => {
     const reg = makeRegistry(() =>
       Promise.resolve(jsonResponse(FIXTURE_STATUS)),
     );
-    for (const name of ["status", "uptime", "free", "docker", "deploys"]) {
+    for (const name of [
+      "status",
+      "uptime",
+      "free",
+      "docker",
+      "deploys",
+      "top",
+    ]) {
       expect(reg.get(name)).toBeDefined();
       expect(reg.teaser(name)).toBeUndefined();
     }
-    expect(reg.get("top")).toBeUndefined();
-    expect(reg.teaser("top")).toBe(TEASERS.top);
   });
 
   it("uptime no longer teases and prints live output", async () => {

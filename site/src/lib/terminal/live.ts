@@ -1,11 +1,13 @@
 import { ApiError, apiFetch } from "../api/client";
 import type { ApiStatus, DeployRecord, DeploysResponse } from "../api/types";
 import type { CommandRegistry } from "./registry";
+import { makeTopCommand } from "./top";
 import type { Command, CommandContext, Line } from "./types";
 import { errorLine, hint, link, text } from "./types";
 
 export interface LiveDeps {
   fetchFn?: typeof fetch;
+  makeSource?: (url: string) => EventSource;
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -126,7 +128,12 @@ export function formatStatusLines(status: ApiStatus, now: Date): Line[] {
   ];
 }
 
-const UNREACHABLE_SUFFIX = "can't reach the api — try the dashboard at /status";
+export const UNREACHABLE_SUFFIX =
+  "can't reach the api — try the dashboard at /status";
+
+export function unreachableLine(cmd: string): Line {
+  return errorLine(`${cmd}: ${UNREACHABLE_SUFFIX}`);
+}
 
 async function runLive(
   cmd: string,
@@ -138,7 +145,7 @@ async function runLive(
   } catch (err) {
     if (err instanceof ApiError) {
       if (ctx.signal.aborted) return;
-      ctx.writer.writeLine(errorLine(`${cmd}: ${UNREACHABLE_SUFFIX}`));
+      ctx.writer.writeLine(unreachableLine(cmd));
       return;
     }
     throw err;
@@ -156,7 +163,7 @@ export function registerLiveCommands(
   reg: CommandRegistry,
   deps: LiveDeps = {},
 ): void {
-  const { fetchFn } = deps;
+  const { fetchFn, makeSource } = deps;
 
   // The page-load prefetch is memoized; the first `status` reuses that snapshot
   // (already fetched for autoplay) instead of hitting the api again. A null
@@ -221,6 +228,7 @@ export function registerLiveCommands(
         });
       },
     },
+    makeTopCommand({ makeSource, unreachableLine: unreachableLine("top") }),
   ];
 
   for (const cmd of commands) reg.register(cmd);
