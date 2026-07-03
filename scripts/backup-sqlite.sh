@@ -12,7 +12,7 @@ mkdir -p "$BACKUP_DIR"
 log() { echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*" >>"$LOG_FILE"; }
 
 shopt -s nullglob
-dbs=("$DATA_DIR"/*.db)
+dbs=("$DATA_DIR"/*.db "$DATA_DIR"/*/*.db)
 if [ ${#dbs[@]} -eq 0 ]; then
   log "no databases in $DATA_DIR, nothing to back up"
   exit 0
