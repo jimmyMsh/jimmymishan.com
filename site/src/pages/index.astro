@@ -10,6 +10,21 @@ import { EMAIL, GITHUB_URL, LINKEDIN_URL, ROLE, SITE_DESCRIPTION, SITE_TITLE } f
 
 const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.order);
 const projects = (await getCollection("projects")).sort((a, b) => a.data.order - b.data.order);
+
+// Derives the live-cards match key from the project's existing `repo` link
+// rather than a second content field; non-GitHub or missing links opt a
+// card out of decoration.
+function githubRepoName(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const { hostname, pathname } = new URL(url);
+    if (hostname !== "github.com") return undefined;
+    const [, repo] = pathname.split("/").filter(Boolean);
+    return repo;
+  } catch {
+    return undefined;
+  }
+}
 ---
 
 <BaseLayout description={SITE_DESCRIPTION}>
@@ -86,7 +101,7 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     <h2 id="projects-title"><span class="section-prompt">$</span> ls projects/</h2>
     <div class="project-grid">
       {projects.map((project) => (
-        <article class="card">
+        <article class="card" data-github-repo={githubRepoName(project.data.repo)}>
           <h3>{project.data.name}</h3>
           <p>{project.data.summary}</p>
           {project.data.tags && (
@@ -104,6 +119,23 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
       ))}
     </div>
   </section>
+
+  <script>
+    import { apiFetch } from "../lib/api/client";
+    import type { GithubResponse } from "../lib/api/types";
+    import { decorateCards } from "../lib/projects/cards";
+
+    const root = document.getElementById("projects");
+    if (root) {
+      apiFetch<GithubResponse>("/api/github")
+        .then((data) => {
+          decorateCards(root, data);
+        })
+        .catch(() => {
+          // stay on the build-time cards
+        });
+    }
+  </script>
 
   <section id="contact" aria-labelledby="contact-title">
     <h2 id="contact-title"><span class="section-prompt">$</span> contact --list</h2>
@@ -268,6 +300,13 @@ const projects = (await getCollection("projects")).sort((a, b) => a.data.order -
     margin-top: var(--space-4);
     display: flex;
     gap: var(--space-4);
+  }
+  /* runtime-appended by the projects island; no Astro scope attribute */
+  :global(.project-github-meta) {
+    margin-top: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
   }
 
   /* contact */
