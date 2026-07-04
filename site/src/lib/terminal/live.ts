@@ -2,6 +2,7 @@ import { ApiError, apiFetch } from "../api/client";
 import type { ApiStatus, DeployRecord, DeploysResponse } from "../api/types";
 import { absTime, formatDuration, relTime } from "../format/time";
 import type { CommandRegistry } from "./registry";
+import { makeTailCommand } from "./tail";
 import { makeTopCommand } from "./top";
 import type { Command, CommandContext, Line } from "./types";
 import { errorLine, hint, link, text } from "./types";
@@ -206,6 +207,7 @@ export function registerLiveCommands(
     makeTopCommand({ makeSource, unreachableLine: unreachableLine("top") }),
     makeSignCommand(deps),
     makeMsgCommand(deps),
+    makeTailCommand(deps),
   ];
 
   for (const cmd of commands) reg.register(cmd);

@@ -121,3 +121,21 @@ export interface GuestbookResponse {
 export interface TokenResponse {
   token: string;
 }
+
+export interface LogLine {
+  /** epoch seconds */
+  ts: number;
+  method: string;
+  path: string;
+  status: number;
+  country: string;
+}
+
+export interface LogEventData {
+  lines: LogLine[];
+  dropped: number;
+}
+
+export interface LogsResponse {
+  lines: LogLine[];
+}

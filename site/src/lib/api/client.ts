@@ -1,4 +1,4 @@
-import type { DeployRecord, MetricsEventData } from "./types";
+import type { DeployRecord, LogEventData, MetricsEventData } from "./types";
 
 export class ApiError extends Error {
   readonly kind: "timeout" | "network" | "http";
@@ -123,6 +123,7 @@ export interface SubscribeHandlers {
   onMetrics?(data: MetricsEventData): void;
   onPresence?(data: { count: number }): void;
   onDeploy?(data: DeployRecord): void;
+  onLog?(data: LogEventData): void;
   onDown?(): void;
 }
 
@@ -152,6 +153,7 @@ export function subscribeEvents(
   on("metrics", handlers.onMetrics);
   on("presence", handlers.onPresence);
   on("deploy", handlers.onDeploy);
+  on("log", handlers.onLog);
   source.addEventListener("error", () => {
     consecutiveErrors++;
     // A closed source won't reconnect — a fatal response (503 over capacity, a

@@ -159,23 +159,32 @@ function emit(source: FakeEventSource, type: string, data?: unknown): void {
 }
 
 describe("subscribeEvents", () => {
-  it("dispatches metrics, presence, and deploy payloads", () => {
+  it("dispatches metrics, presence, deploy, and log payloads", () => {
     const source = new FakeEventSource();
     const onMetrics = vi.fn();
     const onPresence = vi.fn();
     const onDeploy = vi.fn();
+    const onLog = vi.fn();
     subscribeEvents(
-      { onMetrics, onPresence, onDeploy },
+      { onMetrics, onPresence, onDeploy, onLog },
       () => source as unknown as EventSource,
     );
 
     emit(source, "metrics", { ts: 1, probe_ms: null });
     emit(source, "presence", { count: 2 });
     emit(source, "deploy", { sha: "abc" });
+    emit(source, "log", {
+      lines: [{ ts: 1, method: "GET", path: "/", status: 200, country: "US" }],
+      dropped: 0,
+    });
 
     expect(onMetrics).toHaveBeenCalledWith({ ts: 1, probe_ms: null });
     expect(onPresence).toHaveBeenCalledWith({ count: 2 });
     expect(onDeploy).toHaveBeenCalledWith({ sha: "abc" });
+    expect(onLog).toHaveBeenCalledWith({
+      lines: [{ ts: 1, method: "GET", path: "/", status: 200, country: "US" }],
+      dropped: 0,
+    });
   });
 
   it("calls onDown after 3 straight errors", () => {
