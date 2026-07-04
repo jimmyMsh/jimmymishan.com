@@ -16,6 +16,11 @@ const CONFIG: Config = {
   sseMaxConnections: 100,
   commit: "abc1234",
   dataDir: "/data",
+  guestbookEnabled: true,
+  contactDiscordWebhook: null,
+  logTailEnabled: true,
+  logTailAllowPrivate: false,
+  writeSecret: null,
 };
 
 function buildHost(): HostSampler {

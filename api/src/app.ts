@@ -1,13 +1,21 @@
 import { Hono } from "hono";
 import type { GithubCache } from "./github.js";
+import type { LogTail } from "./logs/listener.js";
+import type { ContactDeps } from "./routes/contact.js";
+import { contactRoutes } from "./routes/contact.js";
 import { deploysRoutes } from "./routes/deploys.js";
 import { eventsRoute } from "./routes/events.js";
 import { githubRoute } from "./routes/github.js";
+import type { GuestbookDeps } from "./routes/guestbook.js";
+import { guestbookRoutes } from "./routes/guestbook.js";
+import { logsRoutes } from "./routes/logs.js";
 import type { RequestCounter } from "./routes/metrics.js";
 import { metricsRoute } from "./routes/metrics.js";
 import type { StatusDeps } from "./routes/status.js";
 import { statusRoute } from "./routes/status.js";
+import { tokenRoute } from "./routes/token.js";
 import type { SloProber } from "./slo/probe.js";
+import type { WriteCounters } from "./writes/gate.js";
 
 export interface AppDeps extends StatusDeps {
   latestMetrics: () => unknown | null;
@@ -15,6 +23,11 @@ export interface AppDeps extends StatusDeps {
   requests: RequestCounter;
   prober: SloProber;
   deploysTotal: () => number;
+  guestbook: GuestbookDeps;
+  contact: ContactDeps;
+  logTail: LogTail | null;
+  writeSecret: string;
+  writeCounters: WriteCounters;
 }
 
 export function buildApp(deps: AppDeps): Hono {
@@ -52,6 +65,11 @@ export function buildApp(deps: AppDeps): Hono {
     }),
   );
   app.route("/", metricsRoute(deps));
+
+  app.route("/", tokenRoute({ secret: deps.writeSecret }));
+  app.route("/", guestbookRoutes(deps.guestbook));
+  app.route("/", contactRoutes(deps.contact));
+  app.route("/", logsRoutes({ tail: deps.logTail }));
 
   return app;
 }

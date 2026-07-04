@@ -65,10 +65,10 @@ test("arrow-up recalls history", async ({ page }) => {
   await expect(page.getByLabel("terminal input")).toHaveValue("echo hi there");
 });
 
-test("future commands answer with the honest teaser", async ({ page }) => {
+test("tail without its file argument prints usage", async ({ page }) => {
   await openTerminal(page);
   await run(page, "tail");
-  await expect(page.getByText(/tail: not wired up yet/)).toBeVisible();
+  await expect(page.getByText("usage: tail -f access.log")).toBeVisible();
 });
 
 test("Tab completes commands and cat/open arguments", async ({ page }) => {

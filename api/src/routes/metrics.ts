@@ -6,6 +6,7 @@ import type { MetricSample, MetricSeries } from "../openmetrics.js";
 import { renderMetrics } from "../openmetrics.js";
 import type { SloProber } from "../slo/probe.js";
 import { sloBlock } from "../slo/rollup.js";
+import type { WriteCounters } from "../writes/gate.js";
 import type { StatusDeps } from "./status.js";
 
 const BYTES_PER_MB = 1024 * 1024;
@@ -55,6 +56,7 @@ export interface MetricsRouteDeps extends StatusDeps {
   github: GithubCache;
   prober: SloProber;
   deploysTotal: () => number;
+  writeCounters: WriteCounters;
 }
 
 // Nearest-rank percentile, matching the method the SLO rollup uses so the
@@ -89,6 +91,7 @@ export function metricsRoute(deps: MetricsRouteDeps): Hono {
     const recentLatencies = (slo?.recent ?? [])
       .map((r) => r.latency_ms)
       .sort((a, b) => a - b);
+    const writeCounterSnapshot = deps.writeCounters.snapshot();
 
     const series: MetricSeries[] = [
       {
@@ -183,6 +186,25 @@ export function metricsRoute(deps: MetricsRouteDeps): Hono {
         help: "Age of the cached GitHub repo data, in seconds.",
         type: "gauge",
         samples: gaugeSample(deps.github.cacheAgeSeconds()),
+      },
+      {
+        name: "jm_write_accepted_total",
+        help: "Total accepted write-path submissions, by route.",
+        type: "counter",
+        samples: writeCounterSnapshot
+          .filter((s) => s.kind === "accepted")
+          .map((s) => ({ labels: { route: s.route }, value: s.count })),
+      },
+      {
+        name: "jm_write_rejected_total",
+        help: "Total rejected write-path submissions, by route and reason.",
+        type: "counter",
+        samples: writeCounterSnapshot
+          .filter((s) => s.kind === "rejected")
+          .map((s) => ({
+            labels: { route: s.route, reason: s.reason ?? "" },
+            value: s.count,
+          })),
       },
     ];
 

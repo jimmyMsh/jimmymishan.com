@@ -9,6 +9,7 @@ import { renderMetrics } from "../src/openmetrics.js";
 import { metricsRoute, RequestCounter } from "../src/routes/metrics.js";
 import { SloProber } from "../src/slo/probe.js";
 import { SseHub } from "../src/sse.js";
+import { WriteCounters } from "../src/writes/gate.js";
 
 describe("renderMetrics", () => {
   it("escapes backslash, double-quote, and newline in label values", () => {
@@ -130,6 +131,11 @@ async function buildMetricsApp() {
       sseMaxConnections: 100,
       commit: "abc1234",
       dataDir: "/data",
+      guestbookEnabled: true,
+      contactDiscordWebhook: null,
+      logTailEnabled: true,
+      logTailAllowPrivate: false,
+      writeSecret: null,
     },
     host,
     containers: () => [{ name: "nginx", up: true, cpu_pct: 0.1, mem_mb: 12 }],
@@ -142,6 +148,7 @@ async function buildMetricsApp() {
     github,
     prober: new SloProber({ db: openSloDb(":memory:") }),
     deploysTotal: () => 7,
+    writeCounters: new WriteCounters(),
   };
 
   const drivenApp = new Hono();

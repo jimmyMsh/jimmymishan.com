@@ -105,6 +105,15 @@
       <li class="muted">—</li>
     </ul>
   </div>
+
+  <div class="panel">
+    <h2>Live traffic</h2>
+    <ul class="traffic" id="st-traffic">
+      <li class="muted">no traffic data</li>
+    </ul>
+  </div>
+
+  <p class="attribution">ip geolocation by <a href="https://db-ip.com">DB-IP</a></p>
 </section>
 
 <script>
@@ -313,6 +322,32 @@
   }
   .feed .dep-bad {
     color: var(--color-text-muted);
+  }
+
+  .traffic {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  /* runtime-appended by the status island — Astro only scopes elements
+     present in this file at build time, so a plain `.traffic-row` rule
+     would silently not match in the production build (see index.astro's
+     :global(.project-github-meta) for the same pattern). */
+  :global(.traffic-row) {
+    overflow-wrap: anywhere;
+  }
+
+  .attribution {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .attribution a {
+    color: var(--color-accent);
   }
 
   @media (prefers-reduced-motion: reduce) {

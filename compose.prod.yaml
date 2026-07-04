@@ -34,5 +34,23 @@ services:
         max-size: 10m
         max-file: "3"
 
+  goatcounter:
+    image: arp242/goatcounter:2.7.0
+    restart: always
+    command:
+      - serve
+      - -listen=:8080
+      - -tls=http
+      - -automigrate
+      - -db=sqlite+/home/goatcounter/goatcounter-data/goatcounter.db
+    cgroup_parent: goatcounter
+    volumes:
+      - ./data/goatcounter:/home/goatcounter/goatcounter-data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
 volumes:
   nginx_secrets:

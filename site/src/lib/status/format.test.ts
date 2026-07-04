@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmtMiB, relTime } from "./format";
+import { fmtMiB, hhmmss, relTime } from "./format";
 
 describe("relTime", () => {
   const now = 1_000_000;
@@ -31,5 +31,15 @@ describe("fmtMiB", () => {
   it("rounds fractional MiB to the nearest integer", () => {
     expect(fmtMiB(312.4)).toBe("312 MiB");
     expect(fmtMiB(312.6)).toBe("313 MiB");
+  });
+});
+
+describe("hhmmss", () => {
+  it("renders the UTC wall-clock time as HH:MM:SS", () => {
+    expect(hhmmss(1751500000)).toBe("23:46:40");
+  });
+
+  it("pads a midnight timestamp to 00:00:00", () => {
+    expect(hhmmss(1751414400)).toBe("00:00:00");
   });
 });

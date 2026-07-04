@@ -38,10 +38,7 @@ describe("teasers", () => {
       "deploys",
       "docker",
       "free",
-      "msg",
-      "sign",
       "status",
-      "tail",
       "top",
       "uptime",
     ]);

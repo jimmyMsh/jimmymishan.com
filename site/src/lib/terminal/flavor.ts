@@ -10,11 +10,8 @@ export const TEASERS: Record<string, string> = {
   deploys:
     "deploys: not wired up yet — the deploy feed ships in an upcoming deploy. (yes.)",
   top: "top: not wired up yet — live process stats ship in an upcoming deploy.",
-  tail: "tail: not wired up yet — live log streaming ships in an upcoming deploy.",
   status:
     "status: not wired up yet — the live dashboard ships in an upcoming deploy.",
-  sign: "sign: not wired up yet — the guestbook ships in an upcoming deploy.",
-  msg: "msg: not wired up yet — direct messages ship in an upcoming deploy.",
 };
 
 export function cowsayLines(message: string): string[] {

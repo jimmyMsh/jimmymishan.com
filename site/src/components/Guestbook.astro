@@ -1,0 +1,176 @@
+---
+---
+
+<section class="guestbook" id="guestbook" aria-labelledby="guestbook-title">
+  <header class="gb-head">
+    <h1 id="guestbook-title"><span class="prompt">$</span> cat guestbook.log</h1>
+    <p class="intro">Leave a note for whoever's here next — public, plain text, no links.</p>
+  </header>
+
+  <noscript>
+    <p class="js-note">signing needs javascript — or the terminal, or curl</p>
+  </noscript>
+
+  <p class="panel error" id="gb-error" hidden>guestbook can't load right now</p>
+
+  <ul class="entries" id="gb-list"></ul>
+
+  <form class="sign-form" id="gb-form">
+    <div class="field">
+      <label for="gb-name">name</label>
+      <input id="gb-name" name="name" type="text" maxlength="32" autocomplete="off" placeholder="anonymous" />
+    </div>
+    <div class="field">
+      <label for="gb-message">message</label>
+      <textarea id="gb-message" name="message" maxlength="280" required></textarea>
+    </div>
+    <div class="visually-hidden">
+      <input id="gb-website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+    </div>
+    <p class="form-error" id="gb-form-error" hidden></p>
+    <p class="confirm" id="gb-confirm" hidden></p>
+    <button type="submit" id="gb-submit">sign</button>
+  </form>
+</section>
+
+<script>
+  import { initGuestbook } from "../lib/guestbook/island";
+
+  const root = document.getElementById("guestbook");
+  if (root) {
+    try {
+      initGuestbook(root);
+    } catch {
+      /* keep the static shell usable */
+    }
+  }
+</script>
+
+<style>
+  .guestbook {
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding: var(--space-12) var(--space-4);
+    display: grid;
+    gap: var(--space-6);
+  }
+  .gb-head h1 {
+    font-size: var(--text-2xl);
+  }
+  .prompt {
+    color: var(--color-accent);
+  }
+  .intro {
+    color: var(--color-text-muted);
+    margin-top: var(--space-2);
+    max-width: 60ch;
+  }
+  .js-note {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .panel.error {
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .entries {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+  /* runtime-appended by the island's render module; these carry no Astro
+     scope attribute, so everything below .entries uses :global() */
+  .entries :global(li) {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+  .entries :global(.gb-meta) {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+  }
+  .entries :global(.gb-msg) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .sign-form {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 40rem;
+  }
+  /* The form's author-origin `display: grid` outranks the user-agent
+     `[hidden] { display: none }` by origin (author > UA), so [hidden] alone
+     can't hide it. This override wins back by higher specificity:
+     `.sign-form[hidden]` is (0,2,0) vs the plain `.sign-form` (0,1,0). */
+  .sign-form[hidden] {
+    display: none;
+  }
+  .field {
+    display: grid;
+    gap: var(--space-2);
+  }
+  label {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  input,
+  textarea {
+    font: inherit;
+    font-family: var(--font-mono);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+  textarea {
+    min-height: 6rem;
+    resize: vertical;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .form-error {
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .confirm {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  button {
+    justify-self: start;
+    font-family: var(--font-mono);
+    color: var(--color-bg);
+    background: var(--color-accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-6);
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>

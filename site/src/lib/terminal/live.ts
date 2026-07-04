@@ -1,40 +1,16 @@
 import { ApiError, apiFetch } from "../api/client";
 import type { ApiStatus, DeployRecord, DeploysResponse } from "../api/types";
+import { absTime, formatDuration, relTime } from "../format/time";
 import type { CommandRegistry } from "./registry";
+import { makeTailCommand } from "./tail";
 import { makeTopCommand } from "./top";
 import type { Command, CommandContext, Line } from "./types";
 import { errorLine, hint, link, text } from "./types";
+import { makeMsgCommand, makeSignCommand } from "./writes";
 
 export interface LiveDeps {
   fetchFn?: typeof fetch;
   makeSource?: (url: string) => EventSource;
-}
-
-function formatDuration(totalSeconds: number): string {
-  const s = Math.max(0, Math.floor(totalSeconds));
-  const days = Math.floor(s / 86400);
-  const hours = Math.floor((s % 86400) / 3600);
-  const minutes = Math.floor((s % 3600) / 60);
-  if (days > 0) {
-    return `${days} day${days === 1 ? "" : "s"}, ${hours}:${String(minutes).padStart(2, "0")}`;
-  }
-  if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}`;
-  return `${minutes} min`;
-}
-
-function relTime(fromSec: number, nowSec: number): string {
-  const diff = Math.max(0, Math.round(nowSec - fromSec));
-  if (diff < 60) return `${diff}s ago`;
-  const min = Math.round(diff / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
-}
-
-function absTime(sec: number): string {
-  return `${new Date(sec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
 }
 
 export function formatUptimeLine(status: ApiStatus, now: Date): Line {
@@ -229,6 +205,9 @@ export function registerLiveCommands(
       },
     },
     makeTopCommand({ makeSource, unreachableLine: unreachableLine("top") }),
+    makeSignCommand(deps),
+    makeMsgCommand(deps),
+    makeTailCommand(deps),
   ];
 
   for (const cmd of commands) reg.register(cmd);

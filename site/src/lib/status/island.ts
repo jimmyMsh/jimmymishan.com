@@ -3,11 +3,14 @@ import type {
   ApiStatus,
   ContainerStatus,
   DeployRecord,
+  LogEventData,
+  LogLine,
+  LogsResponse,
   MetricsEventData,
   SloDay,
 } from "../api/types";
 import { sparklinePath, uptimeBarCells } from "./charts";
-import { fmtMiB, relTime } from "./format";
+import { fmtMiB, hhmmss, relTime, trafficLines } from "./format";
 
 // SVG user-space size for the sparklines; CSS scales them to fit their panel.
 const CHART_W = 300;
@@ -15,6 +18,7 @@ const CHART_H = 60;
 const MAX_METRIC_POINTS = 150; // 5-min rolling window at one sample / 2s
 const MAX_LATENCY_POINTS = 60; // last hour of probes, then live probe_ms
 const MAX_FEED = 10;
+const MAX_TRAFFIC = 15;
 const RETRY_MS = 30_000; // initial-fetch failure → auto-retry
 const POLL_MS = 10_000; // stream down → snapshot polling
 
@@ -73,6 +77,7 @@ export function initStatusDashboard(root: HTMLElement): void {
   const containersEl = q<HTMLElement>("#st-containers");
   const banner = q<HTMLElement>("#st-deploy-banner");
   const feedEl = q<HTMLElement>("#st-feed");
+  const trafficEl = q<HTMLElement>("#st-traffic");
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -81,6 +86,7 @@ export function initStatusDashboard(root: HTMLElement): void {
   let latency: number[] = [];
   const feed: FeedEntry[] = [];
   const seenDeploys = new Set<string>();
+  let traffic: LogLine[] = []; // newest-first
 
   let unsubscribe: (() => void) | null = null;
   let retryTimer: number | undefined;
@@ -97,8 +103,9 @@ export function initStatusDashboard(root: HTMLElement): void {
   }
 
   function renderCpu(current: number): void {
-    cpuVal.textContent = `${current}%`;
-    drawChart(cpuPath, cpuSvg, cpu, `CPU usage ${current}%`);
+    const pct = Math.round(current);
+    cpuVal.textContent = `${pct}%`;
+    drawChart(cpuPath, cpuSvg, cpu, `CPU usage ${pct}%`);
   }
 
   function renderMem(used: number, total: number): void {
@@ -210,6 +217,23 @@ export function initStatusDashboard(root: HTMLElement): void {
     }
   }
 
+  function renderTraffic(): void {
+    trafficEl.replaceChildren();
+    if (traffic.length === 0) {
+      const li = document.createElement("li");
+      li.className = "muted";
+      li.textContent = "no traffic data";
+      trafficEl.append(li);
+      return;
+    }
+    for (const line of traffic) {
+      const li = document.createElement("li");
+      li.className = "traffic-row";
+      li.textContent = `${hhmmss(line.ts)} · ${line.status} · ${line.country} · ${line.method} · ${line.path}`;
+      trafficEl.append(li);
+    }
+  }
+
   function flashBanner(entry: FeedEntry): void {
     banner.hidden = false;
     banner.textContent = `deployed ${entry.sha} · ${entry.status}`;
@@ -292,8 +316,27 @@ export function initStatusDashboard(root: HTMLElement): void {
       onPresence: (d) => setPresence(d.count),
       onDeploy: (d: DeployRecord) =>
         ingestDeploy({ sha: d.sha, status: d.status, at: d.at }, true),
+      onLog: (d: LogEventData) => {
+        traffic = trafficLines(traffic, d, MAX_TRAFFIC);
+        renderTraffic();
+      },
       onDown: startPolling,
     });
+  }
+
+  // Independent of the status fetch below — a disabled/unreachable log tail
+  // must not turn the whole dashboard into an error state, it just leaves
+  // the traffic panel on its quiet empty state.
+  async function loadTraffic(): Promise<void> {
+    try {
+      const logs = await apiFetch<LogsResponse>("/api/logs", {
+        timeoutMs: 3000,
+      });
+      traffic = logs.lines.slice(-MAX_TRAFFIC).reverse();
+    } catch {
+      traffic = [];
+    }
+    renderTraffic();
   }
 
   async function loadInitial(): Promise<void> {
@@ -301,6 +344,7 @@ export function initStatusDashboard(root: HTMLElement): void {
       clearTimeout(retryTimer);
       retryTimer = undefined;
     }
+    void loadTraffic();
     try {
       const status = await apiFetch<ApiStatus>("/api/status", {
         timeoutMs: 3000,
