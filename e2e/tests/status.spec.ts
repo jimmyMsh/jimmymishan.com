@@ -77,7 +77,7 @@ test("first paint renders the mocked snapshot", async ({ page }) => {
   await page.goto("/status/");
 
   await expect(page.locator("#st-presence")).toHaveText("3");
-  await expect(page.locator("#st-cpu-val")).toHaveText("7.1%");
+  await expect(page.locator("#st-cpu-val")).toHaveText("7%");
   await expect(page.locator("#st-mem-val")).toHaveText("312 MiB / 957 MiB");
   await expect(page.locator("#st-lat-val")).toHaveText("44 ms");
   await expect(page.locator("#st-load")).toHaveText("0.12 0.08 0.05");

@@ -35,6 +35,17 @@ const ISLANDS = [
     prefix: "index.astro_astro_type_script_index_0_lang",
     budget: 3 * KB,
   },
+  {
+    name: "guestbook",
+    prefix: "Guestbook.astro_astro_type_script_index_0_lang",
+    budget: 4 * KB,
+  },
+  {
+    // index.astro's second inline script (index_0 is the projects cards above).
+    name: "contact",
+    prefix: "index.astro_astro_type_script_index_1_lang",
+    budget: 3 * KB,
+  },
 ];
 
 // Static and side-effect imports of sibling chunks; excludes lazy import(...)
