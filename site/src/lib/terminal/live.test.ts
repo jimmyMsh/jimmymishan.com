@@ -134,6 +134,19 @@ describe("formatters", () => {
     expect(lines.at(-1)?.kind).toBe("hint");
   });
 
+  it("formatDeployLines uses the shared relTime's floor/'min' label (unified with /status)", () => {
+    const recent: DeployRecord = {
+      sha: "f00d000",
+      tag: null,
+      status: "ok",
+      actor: null,
+      at: DEPLOY_AT,
+    };
+    const shortlyAfter = new Date((DEPLOY_AT + 185) * 1000); // 3min 5s later
+    const lines = formatDeployLines([recent], shortlyAfter);
+    expect(textOf(lines)).toContain("3min ago");
+  });
+
   it("formatStatusLines includes presence, availability, and a /status link", () => {
     const lines = formatStatusLines(FIXTURE_STATUS, NOW);
     const out = textOf(lines);
