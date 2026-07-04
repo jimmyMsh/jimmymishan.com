@@ -5,6 +5,7 @@ import type { CommandRegistry } from "./registry";
 import { makeTopCommand } from "./top";
 import type { Command, CommandContext, Line } from "./types";
 import { errorLine, hint, link, text } from "./types";
+import { makeMsgCommand, makeSignCommand } from "./writes";
 
 export interface LiveDeps {
   fetchFn?: typeof fetch;
@@ -203,6 +204,8 @@ export function registerLiveCommands(
       },
     },
     makeTopCommand({ makeSource, unreachableLine: unreachableLine("top") }),
+    makeSignCommand(deps),
+    makeMsgCommand(deps),
   ];
 
   for (const cmd of commands) reg.register(cmd);

@@ -3,16 +3,24 @@ import type { DeployRecord, MetricsEventData } from "./types";
 export class ApiError extends Error {
   readonly kind: "timeout" | "network" | "http";
   readonly status?: number;
+  /** parsed from a JSON {"error": code} non-2xx body, else undefined */
+  readonly code?: string;
+  /** parsed from that same body's optional "field", else undefined */
+  readonly field?: string;
 
   constructor(
     kind: "timeout" | "network" | "http",
     message: string,
     status?: number,
+    code?: string,
+    field?: string,
   ) {
     super(message);
     this.name = "ApiError";
     this.kind = kind;
     this.status = status;
+    this.code = code;
+    this.field = field;
   }
 }
 
@@ -20,11 +28,34 @@ export interface ApiFetchOptions {
   timeoutMs?: number;
   signal?: AbortSignal;
   fetchFn?: typeof fetch;
+  method?: "GET" | "POST";
+  body?: unknown;
 }
 
 class HttpStatusError extends Error {
-  constructor(readonly status: number) {
+  constructor(
+    readonly status: number,
+    readonly code?: string,
+    readonly field?: string,
+  ) {
     super(`http ${status}`);
+  }
+}
+
+// Non-2xx bodies aren't guaranteed to be JSON (or to be our own write-endpoint
+// shape) — swallow parse failures rather than misreporting them as a network
+// error.
+async function parseErrorBody(
+  res: Response,
+): Promise<{ code?: string; field?: string }> {
+  try {
+    const body = (await res.json()) as { error?: unknown; field?: unknown };
+    return {
+      code: typeof body.error === "string" ? body.error : undefined,
+      field: typeof body.field === "string" ? body.field : undefined,
+    };
+  } catch {
+    return {};
   }
 }
 
@@ -32,7 +63,13 @@ export async function apiFetch<T>(
   path: string,
   opts: ApiFetchOptions = {},
 ): Promise<T> {
-  const { timeoutMs = 3000, signal: external, fetchFn = fetch } = opts;
+  const {
+    timeoutMs = 3000,
+    signal: external,
+    fetchFn = fetch,
+    method = "GET",
+    body,
+  } = opts;
   const timeoutController = new AbortController();
   const timer = setTimeout(() => timeoutController.abort(), timeoutMs);
   const combined = external
@@ -48,15 +85,30 @@ export async function apiFetch<T>(
     else combined.addEventListener("abort", fail, { once: true });
   });
 
+  const init: RequestInit = { signal: combined, method };
+  if (body !== undefined) {
+    init.headers = { "content-type": "application/json" };
+    init.body = JSON.stringify(body);
+  }
+
   try {
-    const fetchPromise = fetchFn(path, { signal: combined });
+    const fetchPromise = fetchFn(path, init);
     fetchPromise.catch(() => {});
     const res = await Promise.race([fetchPromise, aborted]);
-    if (!res.ok) throw new HttpStatusError(res.status);
+    if (!res.ok) {
+      const { code, field } = await parseErrorBody(res);
+      throw new HttpStatusError(res.status, code, field);
+    }
     return (await res.json()) as T;
   } catch (err) {
     if (err instanceof HttpStatusError) {
-      throw new ApiError("http", `${path}: http ${err.status}`, err.status);
+      throw new ApiError(
+        "http",
+        `${path}: http ${err.status}`,
+        err.status,
+        err.code,
+        err.field,
+      );
     }
     if (timeoutController.signal.aborted) {
       throw new ApiError("timeout", `${path}: timed out after ${timeoutMs}ms`);

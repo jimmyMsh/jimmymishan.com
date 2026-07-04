@@ -104,3 +104,20 @@ export interface DeployRecord {
 export interface DeploysResponse {
   deploys: DeployRecord[];
 }
+
+export interface GuestbookEntry {
+  id: number;
+  name: string;
+  message: string;
+  /** epoch seconds */
+  ts: number;
+}
+
+export interface GuestbookResponse {
+  entries: GuestbookEntry[];
+  token: string;
+}
+
+export interface TokenResponse {
+  token: string;
+}

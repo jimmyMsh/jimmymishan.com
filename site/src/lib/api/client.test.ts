@@ -65,6 +65,81 @@ describe("apiFetch", () => {
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).kind).toBe("network");
   });
+
+  it("defaults to GET with no body or content-type header", async () => {
+    const fetchFn = vi.fn((_input: unknown, opts?: RequestInit) => {
+      expect(opts?.method).toBe("GET");
+      expect(opts?.body).toBeUndefined();
+      expect(
+        opts?.headers &&
+          (opts.headers as Record<string, string>)["content-type"],
+      ).toBeUndefined();
+      return Promise.resolve(jsonResponse({ foo: 1 }));
+    });
+    await apiFetch("/api/status", {
+      fetchFn: fetchFn as unknown as typeof fetch,
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends method, JSON content-type header, and serialized body on POST", async () => {
+    const fetchFn = vi.fn((_input: unknown, opts?: RequestInit) => {
+      expect(opts?.method).toBe("POST");
+      expect((opts?.headers as Record<string, string>)["content-type"]).toBe(
+        "application/json",
+      );
+      expect(opts?.body).toBe(JSON.stringify({ a: 1 }));
+      return Promise.resolve(jsonResponse({ ok: true }));
+    });
+    await apiFetch("/api/guestbook", {
+      method: "POST",
+      body: { a: 1 },
+      fetchFn: fetchFn as unknown as typeof fetch,
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("parses ApiError.code from a JSON {error} body on non-2xx", async () => {
+    const fetchFn = vi.fn(() =>
+      Promise.resolve(jsonResponse({ error: "rate_limited" }, 429)),
+    );
+    const err = await apiFetch("/api/guestbook", {
+      method: "POST",
+      body: {},
+      fetchFn,
+    }).catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).code).toBe("rate_limited");
+  });
+
+  it("parses ApiError.field from a JSON {error,field} body on non-2xx", async () => {
+    const fetchFn = vi.fn(() =>
+      Promise.resolve(
+        jsonResponse({ error: "invalid", field: "message" }, 400),
+      ),
+    );
+    const err = await apiFetch("/api/guestbook", {
+      method: "POST",
+      body: {},
+      fetchFn,
+    }).catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).code).toBe("invalid");
+    expect((err as ApiError).field).toBe("message");
+  });
+
+  it("leaves ApiError.code undefined on a non-JSON error body", async () => {
+    const fetchFn = vi.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        json: () => Promise.reject(new SyntaxError("not json")),
+      } as unknown as Response),
+    );
+    const err = await apiFetch("/api/status", { fetchFn }).catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).code).toBeUndefined();
+  });
 });
 
 class FakeEventSource extends EventTarget {
