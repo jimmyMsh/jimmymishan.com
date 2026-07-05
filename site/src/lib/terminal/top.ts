@@ -1,5 +1,6 @@
 import { subscribeEvents } from "../api/client";
 import type { MetricsEventData } from "../api/types";
+import { padColumn } from "./columns";
 import type { Command, CommandContext, Line } from "./types";
 import { hint, text } from "./types";
 
@@ -7,10 +8,6 @@ import { hint, text } from "./types";
 // this cap just keeps the frame height constant even if it grows a bit.
 const MAX_CONTAINER_ROWS = 4;
 export const TOP_FRAME_HEIGHT = 2 + MAX_CONTAINER_ROWS;
-
-function padEnd(value: string, width: number): string {
-  return value.padEnd(width);
-}
 
 function hostLine(data: MetricsEventData): Line {
   const probe = data.probe_ms === null ? "-" : `${data.probe_ms}ms`;
@@ -22,15 +19,15 @@ function hostLine(data: MetricsEventData): Line {
 
 function tableHeader(): Line {
   return text(
-    `${padEnd("NAME", 10)}${padEnd("STATUS", 9)}${padEnd("CPU", 8)}MEM`,
+    `${padColumn("NAME", 10)}${padColumn("STATUS", 9)}${padColumn("CPU", 8)}MEM`,
   );
 }
 
 function containerRow(c: MetricsEventData["containers"][number]): Line {
-  const cpu = c.cpu_pct === null ? "-" : `${c.cpu_pct}%`;
+  const cpu = c.cpu_pct === null ? "-" : `${c.cpu_pct.toFixed(1)}%`;
   const mem = c.mem_mb === null ? "-" : `${c.mem_mb} MiB`;
   return text(
-    `${padEnd(c.name, 10)}${padEnd(c.up ? "up" : "down", 9)}${padEnd(cpu, 8)}${mem}`,
+    `${padColumn(c.name, 10)}${padColumn(c.up ? "up" : "down", 9)}${padColumn(cpu, 8)}${mem}`,
   );
 }
 

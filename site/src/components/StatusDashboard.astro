@@ -67,7 +67,7 @@
         <line class="spark-axis" x1="0" y1="59.5" x2="300" y2="59.5"></line>
         <path class="spark-line" id="st-lat-path" d="" vector-effect="non-scaling-stroke"></path>
       </svg>
-      <p class="metric"><span id="st-lat-val">—</span></p>
+      <p class="metric"><span id="st-lat-val" class="muted">—</span></p>
     </div>
 
     <div class="panel">
@@ -83,7 +83,7 @@
   <div class="panel">
     <h2>Uptime <span class="muted">· last 90 days</span></h2>
     <div class="bars" id="st-bars" role="img" aria-label="90-day uptime history"></div>
-    <p class="metric" id="st-slo">—</p>
+    <p class="metric muted" id="st-slo">—</p>
   </div>
 
   <div class="panel">
@@ -177,6 +177,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: var(--space-6);
+    min-width: 0;
   }
   .panel h2 {
     font-family: var(--font-mono);
@@ -191,7 +192,7 @@
     font-family: var(--font-mono);
     font-size: var(--text-sm);
   }
-  .muted {
+  .panel :global(.muted) {
     color: var(--color-text-muted);
   }
 
@@ -227,6 +228,7 @@
     display: flex;
     justify-content: space-between;
     gap: var(--space-4);
+    min-width: 0;
   }
   .kv dt {
     color: var(--color-text-muted);
@@ -234,6 +236,8 @@
   .kv dd {
     margin: 0;
     color: var(--color-text);
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .bars {
@@ -263,6 +267,7 @@
 
   .containers {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -273,13 +278,20 @@
     font-weight: normal;
     padding-bottom: var(--space-2);
   }
-  .containers td {
+  .containers th:nth-child(1) { width: 34%; }
+  .containers th:nth-child(2) { width: 22%; }
+  .containers th:nth-child(3) { width: 22%; }
+  .containers th:nth-child(4) { width: 22%; }
+  .containers :global(td) {
     padding: var(--space-1) 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .containers td.up {
+  .containers :global(td.up) {
     color: var(--color-accent);
   }
-  .containers td.down {
+  .containers :global(td.down) {
     color: var(--color-text-muted);
   }
 

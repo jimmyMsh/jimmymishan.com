@@ -112,7 +112,7 @@ export class ContainerStats {
     return {
       name: svc.name,
       up: true,
-      cpu_pct: pct,
+      cpu_pct: pct === null ? null : Math.round(pct * 10) / 10,
       mem_mb: Math.round(reading.memBytes / BYTES_PER_MIB),
     };
   }

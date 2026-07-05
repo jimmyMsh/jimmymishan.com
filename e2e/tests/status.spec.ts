@@ -45,7 +45,7 @@ function statusFixture() {
         { ts: nowSec - 60, latency_ms: 44 },
       ],
     },
-    commit: "c584a9e",
+    commit: "c584a9e0f1e2d3c4b5a69788766554433221100f",
     api_uptime_s: 4242,
   };
 }
@@ -81,7 +81,7 @@ test("first paint renders the mocked snapshot", async ({ page }) => {
   await expect(page.locator("#st-mem-val")).toHaveText("312 MiB / 957 MiB");
   await expect(page.locator("#st-lat-val")).toHaveText("44 ms");
   await expect(page.locator("#st-load")).toHaveText("0.12 0.08 0.05");
-  await expect(page.locator("#st-uptime")).toHaveText("12d 7h");
+  await expect(page.locator("#st-uptime")).toHaveText("12 days, 7:57");
   await expect(page.locator("#st-commit")).toHaveText("c584a9e");
   await expect(page.locator("#st-slo")).toHaveText(
     "99.98% available over 90d · p50 42 ms · p99 180 ms",
@@ -91,7 +91,16 @@ test("first paint renders the mocked snapshot", async ({ page }) => {
   await expect(containers).toHaveCount(2);
   await expect(containers.first()).toContainText("nginx");
   await expect(containers.first()).toContainText("up");
+
+  const upCell = page.locator("#st-containers td.up").first();
+  await expect(upCell).toHaveCSS("color", "rgb(63, 185, 80)");
+
   await expect(page.locator("#st-feed")).toContainText("c584a9e");
+
+  // no SSE traffic events are driven, so the runtime-rendered empty state stays
+  const emptyState = page.locator("#st-traffic li.muted");
+  await expect(emptyState).toHaveText("no traffic data");
+  await expect(emptyState).toHaveCSS("color", "rgb(139, 148, 158)");
 
   // uptime bars always fill the 90-day window
   await expect(page.locator("#st-bars span")).toHaveCount(90);
