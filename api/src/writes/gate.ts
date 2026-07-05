@@ -88,6 +88,15 @@ export class DailyCaps {
     this.globalCount += 1;
     return true;
   }
+
+  /** Give back a slot consumed by allow() when the gated action later
+   * fails through no fault of the sender (e.g. upstream delivery 502). */
+  refund(ipHash: string, dayUtc: string): void {
+    if (dayUtc !== this.day) return;
+    const ipCount = this.perIpCounts.get(ipHash) ?? 0;
+    if (ipCount > 0) this.perIpCounts.set(ipHash, ipCount - 1);
+    if (this.globalCount > 0) this.globalCount -= 1;
+  }
 }
 
 type WriteRoute = "guestbook" | "contact";
@@ -97,7 +106,8 @@ type RejectReason =
   | "rate"
   | "honeypot"
   | "blocked"
-  | "disabled";
+  | "disabled"
+  | "delivery";
 
 export interface WriteCounterSample {
   route: string;

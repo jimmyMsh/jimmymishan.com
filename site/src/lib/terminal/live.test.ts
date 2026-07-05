@@ -124,6 +124,17 @@ describe("formatters", () => {
     );
   });
 
+  it("formatDockerLines truncates overlong names and shows cpu with one decimal", () => {
+    const status: ApiStatus = {
+      ...FIXTURE_STATUS,
+      containers: [
+        { name: "goatcounter", up: true, cpu_pct: 12.3, mem_mb: 25 },
+      ],
+    };
+    const lines = formatDockerLines(status);
+    expect(textOf([lines[1]])).toBe("goatcount up       12.3%   25 MiB");
+  });
+
   it("formatDeployLines shows relative and absolute times plus a hint", () => {
     const lines = formatDeployLines(FIXTURE_DEPLOYS, NOW);
     expect(textOf(lines)).toBe(

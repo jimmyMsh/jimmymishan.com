@@ -19,7 +19,9 @@ describe("site metadata", () => {
     expect(SITE_DESCRIPTION).toContain("Production Engineer");
     expect(EMAIL).toBe("jimmymishan2004@gmail.com");
     expect(GITHUB_URL).toBe("https://github.com/jimmyMsh");
-    expect(LINKEDIN_URL).toBe("https://www.linkedin.com/in/jimmymishan/");
+    expect(LINKEDIN_URL).toBe(
+      "https://www.linkedin.com/in/jimmy-mishan-1442ba264/",
+    );
     expect(RESUME_PATH).toBe("/resume.pdf");
   });
 });

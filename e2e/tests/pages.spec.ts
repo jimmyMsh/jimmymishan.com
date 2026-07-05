@@ -32,7 +32,7 @@ test("layout shell: nav, footer, skip link, meta", async ({ page }) => {
   );
   await expect(footer.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
     "href",
-    "https://www.linkedin.com/in/jimmymishan/",
+    "https://www.linkedin.com/in/jimmy-mishan-1442ba264/",
   );
   await expect(
     footer.getByRole("link", { name: /jimmymishan2004/ }),
@@ -106,4 +106,9 @@ test("unknown route returns the 404 page", async ({ page }) => {
   const response = await page.goto("/definitely-not-a-page");
   expect(response?.status()).toBe(404);
   await expect(page.getByText(/command not found/)).toBeVisible();
+});
+
+test("anchor targets clear the sticky header", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#about")).toHaveCSS("scroll-margin-top", "88px");
 });

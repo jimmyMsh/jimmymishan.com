@@ -21,6 +21,11 @@ html {
   }
 }
 
+/* The sticky nav overlays anchor targets on fragment jumps without this. */
+[id] {
+  scroll-margin-top: calc(var(--space-16) + var(--space-6));
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);

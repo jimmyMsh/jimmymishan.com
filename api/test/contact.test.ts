@@ -385,30 +385,40 @@ describe("POST /api/contact", () => {
 
   it("returns 502 delivery_failed when discord responds non-2xx", async () => {
     const fetchFn = vi.fn(async () => jsonResponse(500));
-    const { app, secret } = buildApp({ fetchFn });
+    const { app, counters, secret } = buildApp({ fetchFn });
 
     const res = await postContact(app, validBody(secret));
 
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "delivery_failed" });
+    expect(counters.snapshot()).toEqual(
+      expect.arrayContaining([
+        { route: "contact", kind: "rejected", reason: "delivery", count: 1 },
+      ]),
+    );
   });
 
   it("returns 502 delivery_failed when the fetch throws a network error", async () => {
     const fetchFn = vi.fn(async () => {
       throw new TypeError("fetch failed");
     });
-    const { app, secret } = buildApp({ fetchFn });
+    const { app, counters, secret } = buildApp({ fetchFn });
 
     const res = await postContact(app, validBody(secret));
 
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "delivery_failed" });
+    expect(counters.snapshot()).toEqual(
+      expect.arrayContaining([
+        { route: "contact", kind: "rejected", reason: "delivery", count: 1 },
+      ]),
+    );
   });
 
   it("returns 502 delivery_failed after a 5s delivery timeout", async () => {
     vi.useFakeTimers();
     const fetchFn = vi.fn(() => new Promise<Response>(() => {}));
-    const { app, secret } = buildApp({ fetchFn });
+    const { app, counters, secret } = buildApp({ fetchFn });
 
     const pending = postContact(app, validBody(secret));
     await vi.advanceTimersByTimeAsync(5000);
@@ -416,6 +426,24 @@ describe("POST /api/contact", () => {
     const res = await pending;
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "delivery_failed" });
+    expect(counters.snapshot()).toEqual(
+      expect.arrayContaining([
+        { route: "contact", kind: "rejected", reason: "delivery", count: 1 },
+      ]),
+    );
     vi.useRealTimers();
+  });
+
+  it("refunds the daily cap when delivery fails", async () => {
+    let deliveryOk = false;
+    const fetchFn = vi.fn(async () => jsonResponse(deliveryOk ? 204 : 500));
+    const { app, secret } = buildApp({ perIpCap: 1, fetchFn });
+
+    const first = await postContact(app, validBody(secret));
+    expect(first.status).toBe(502);
+
+    deliveryOk = true;
+    const second = await postContact(app, validBody(secret));
+    expect(second.status).toBe(200);
   });
 });

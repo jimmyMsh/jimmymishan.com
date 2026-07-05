@@ -1,6 +1,7 @@
 import { ApiError, apiFetch } from "../api/client";
 import type { ApiStatus, DeployRecord, DeploysResponse } from "../api/types";
 import { absTime, formatDuration, relTime } from "../format/time";
+import { padColumn } from "./columns";
 import type { CommandRegistry } from "./registry";
 import { makeTailCommand } from "./tail";
 import { makeTopCommand } from "./top";
@@ -34,16 +35,12 @@ export function formatFreeLines(status: ApiStatus): Line[] {
   return [text(header), text(row)];
 }
 
-function padEnd(value: string, width: number): string {
-  return value.padEnd(width);
-}
-
 export function formatDockerLines(status: ApiStatus): Line[] {
-  const header = `${padEnd("NAME", 10)}${padEnd("STATUS", 9)}${padEnd("CPU", 8)}MEM`;
+  const header = `${padColumn("NAME", 10)}${padColumn("STATUS", 9)}${padColumn("CPU", 8)}MEM`;
   const rows = status.containers.map((c) => {
-    const cpu = c.cpu_pct === null ? "-" : `${c.cpu_pct}%`;
+    const cpu = c.cpu_pct === null ? "-" : `${c.cpu_pct.toFixed(1)}%`;
     const mem = c.mem_mb === null ? "-" : `${c.mem_mb} MiB`;
-    return `${padEnd(c.name, 10)}${padEnd(c.up ? "up" : "down", 9)}${padEnd(cpu, 8)}${mem}`;
+    return `${padColumn(c.name, 10)}${padColumn(c.up ? "up" : "down", 9)}${padColumn(cpu, 8)}${mem}`;
   });
   return [text(header), ...rows.map((r) => text(r))];
 }
@@ -51,7 +48,9 @@ export function formatDockerLines(status: ApiStatus): Line[] {
 export function formatDeployLines(deploys: DeployRecord[], now: Date): Line[] {
   const nowSec = Math.floor(now.getTime() / 1000);
   const rows = deploys.map((d) =>
-    text(`${d.sha}  ${d.status}  ${relTime(d.at, nowSec)} (${absTime(d.at)})`),
+    text(
+      `${d.sha.slice(0, 7)}  ${d.status}  ${relTime(d.at, nowSec)} (${absTime(d.at)})`,
+    ),
   );
   return [...rows, hint("# see the full feed at /status")];
 }
@@ -70,7 +69,7 @@ export function formatStatusLines(status: ApiStatus, now: Date): Line[] {
         const base = `${c.name} ${c.up ? "up" : "down"}`;
         return c.cpu_pct === null || c.mem_mb === null
           ? base
-          : `${base} (${c.cpu_pct}% · ${c.mem_mb} MiB)`;
+          : `${base} (${c.cpu_pct.toFixed(1)}% · ${c.mem_mb} MiB)`;
       })
       .join(" · ")}`,
   );
@@ -78,7 +77,7 @@ export function formatStatusLines(status: ApiStatus, now: Date): Line[] {
   const deployLine = text(
     status.deploy === null
       ? "last deploy: none yet"
-      : `last deploy: ${status.deploy.sha} ${status.deploy.status} · ${relTime(status.deploy.at, nowSec)}`,
+      : `last deploy: ${status.deploy.sha.slice(0, 7)} ${status.deploy.status} · ${relTime(status.deploy.at, nowSec)}`,
   );
 
   const presenceLine = text(`presence: ${status.presence} here now`);

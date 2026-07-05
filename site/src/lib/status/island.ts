@@ -9,6 +9,7 @@ import type {
   MetricsEventData,
   SloDay,
 } from "../api/types";
+import { formatDuration } from "../format/time";
 import { sparklinePath, uptimeBarCells } from "./charts";
 import { fmtMiB, hhmmss, relTime, trafficLines } from "./format";
 
@@ -26,15 +27,6 @@ interface FeedEntry {
   sha: string;
   status: string;
   at: number;
-}
-
-function fmtUptime(seconds: number): string {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
 }
 
 function pushCapped(arr: number[], value: number, cap: number): void {
@@ -120,6 +112,7 @@ export function initStatusDashboard(root: HTMLElement): void {
 
   function renderLatency(): void {
     const cur = latency.at(-1);
+    latVal.classList.toggle("muted", cur === undefined);
     latVal.textContent = cur === undefined ? "no probe data" : `${cur} ms`;
     drawChart(
       latPath,
@@ -131,7 +124,7 @@ export function initStatusDashboard(root: HTMLElement): void {
 
   function renderHost(host: ApiStatus["host"]): void {
     loadEl.textContent = `${host.load1} ${host.load5} ${host.load15}`;
-    uptimeEl.textContent = fmtUptime(host.uptime_s);
+    uptimeEl.textContent = formatDuration(host.uptime_s);
   }
 
   function renderContainers(list: readonly ContainerStatus[]): void {
@@ -154,7 +147,7 @@ export function initStatusDashboard(root: HTMLElement): void {
       status.textContent = c.up ? "up" : "down";
       status.className = c.up ? "up" : "down";
       const cpuTd = document.createElement("td");
-      cpuTd.textContent = c.cpu_pct === null ? "-" : `${c.cpu_pct}%`;
+      cpuTd.textContent = c.cpu_pct === null ? "-" : `${c.cpu_pct.toFixed(1)}%`;
       const memTd = document.createElement("td");
       memTd.textContent = c.mem_mb === null ? "-" : fmtMiB(c.mem_mb);
       tr.append(name, status, cpuTd, memTd);
@@ -174,6 +167,7 @@ export function initStatusDashboard(root: HTMLElement): void {
   }
 
   function renderSlo(slo: ApiStatus["slo"]): void {
+    sloEl.classList.toggle("muted", slo === null);
     sloEl.textContent =
       slo === null
         ? "no SLO data yet"
@@ -198,7 +192,7 @@ export function initStatusDashboard(root: HTMLElement): void {
       const li = document.createElement("li");
       const sha = document.createElement("span");
       sha.className = "sha";
-      sha.textContent = entry.sha;
+      sha.textContent = entry.sha.slice(0, 7);
       const status = document.createElement("span");
       // class from a build-time literal, never the raw API string
       status.className = entry.status === "ok" ? "dep-ok" : "dep-bad";
@@ -236,7 +230,7 @@ export function initStatusDashboard(root: HTMLElement): void {
 
   function flashBanner(entry: FeedEntry): void {
     banner.hidden = false;
-    banner.textContent = `deployed ${entry.sha} · ${entry.status}`;
+    banner.textContent = `deployed ${entry.sha.slice(0, 7)} · ${entry.status}`;
     if (reduced) return;
     banner.classList.remove("flash");
     void banner.offsetWidth; // restart the CSS animation on repeat deploys
@@ -267,7 +261,7 @@ export function initStatusDashboard(root: HTMLElement): void {
     renderBars(status.slo?.days ?? []);
     renderSlo(status.slo);
     setPresence(status.presence);
-    commitEl.textContent = status.commit;
+    commitEl.textContent = status.commit.slice(0, 7);
     if (status.deploy) {
       ingestDeploy(
         {

@@ -91,6 +91,17 @@ describe("formatTopFrame", () => {
     const lines = formatTopFrame({ ...FIXTURE_METRICS, probe_ms: null });
     expect(textOf(lines)).toContain("probe -");
   });
+
+  it("truncates overlong names and shows cpu with one decimal", () => {
+    const data: MetricsEventData = {
+      ...FIXTURE_METRICS,
+      containers: [
+        { name: "goatcounter", up: true, cpu_pct: 12.3, mem_mb: 25 },
+      ],
+    };
+    const lines = formatTopFrame(data);
+    expect(textOf([lines[2]])).toBe("goatcount up       12.3%   25 MiB");
+  });
 });
 
 function run(makeSource: (url: string) => EventSource) {

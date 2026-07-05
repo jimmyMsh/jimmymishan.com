@@ -59,6 +59,25 @@ describe("ContainerStats", () => {
     });
   });
 
+  it("rounds cpu_pct to one decimal", async () => {
+    await withTempCgroup(async (dir) => {
+      let now = 1000;
+      const stats = new ContainerStats({
+        cgroupDir: dir,
+        services,
+        now: () => now,
+      });
+      await stats.sample();
+      writeFileSync(
+        join(dir, "nginx.slice", "childa", "cpu.stat"),
+        "usage_usec 1150600\n",
+      );
+      now = 3000;
+      const second = await stats.sample();
+      expect(second[0]).toMatchObject({ name: "nginx", cpu_pct: 7.5 });
+    });
+  });
+
   it("reports cpu_pct null on the first sample of a resolved service", async () => {
     const stats = new ContainerStats({
       cgroupDir: FIXTURES_DIR,

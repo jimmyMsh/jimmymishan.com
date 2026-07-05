@@ -9,5 +9,6 @@
     "Restored observability across critical control-plane paths with logging fixes, replay testing, and p50/p95/p99 latency, throughput, and correctness dashboards."
   ],
   "link": "https://about.meta.com/",
+  "logo": "../../assets/img/meta-fellowship.jpg",
   "order": 3
 }
