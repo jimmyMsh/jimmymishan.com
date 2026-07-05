@@ -32,7 +32,7 @@ test("layout shell: nav, footer, skip link, meta", async ({ page }) => {
   );
   await expect(footer.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
     "href",
-    "https://www.linkedin.com/in/jimmymishan/",
+    "https://www.linkedin.com/in/jimmy-mishan-1442ba264/",
   );
   await expect(
     footer.getByRole("link", { name: /jimmymishan2004/ }),
