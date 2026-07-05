@@ -1,13 +1,13 @@
 {
-  "role": "Production Engineer",
+  "role": "Production Engineering Intern",
   "company": "Meta",
-  "start": "[PLACEHOLDER — start month as YYYY-MM]",
-  "end": null,
-  "summary": "[PLACEHOLDER — one-line, quantified summary of the PE role: what you own, at what scale]",
+  "start": "2025-05",
+  "end": "2025-08",
+  "summary": "Built reliability and observability tooling for Meta's data-infrastructure control plane, validating 10M+ throttling messages/hour before deploys.",
   "highlights": [
-    "[PLACEHOLDER — impact bullet: scale / scope / outcome]",
-    "[PLACEHOLDER — impact bullet: scale / scope / outcome]"
+    "Built a production-scale throttling validation framework processing 10M+ messages/hour to test rule-based decisions before deploys.",
+    "Restored observability across critical control-plane paths with logging fixes, replay testing, and p50/p95/p99 latency, throughput, and correctness dashboards."
   ],
   "link": "https://about.meta.com/",
-  "order": 1
+  "order": 3
 }
