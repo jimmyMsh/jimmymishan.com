@@ -2,7 +2,7 @@ services:
   nginx:
     image: ghcr.io/jimmymsh/jimmymishan.com/site:${TAG:-latest}
     restart: always
-    cgroup_parent: nginx
+    cgroup_parent: nginx.slice
     ports:
       - "80:80"
       - "443:443"
@@ -22,7 +22,7 @@ services:
   api:
     image: ghcr.io/jimmymsh/jimmymishan.com/api:${TAG:-latest}
     restart: always
-    cgroup_parent: api
+    cgroup_parent: api.slice
     env_file:
       - .env
     volumes:
@@ -43,7 +43,7 @@ services:
       - -tls=http
       - -automigrate
       - -db=sqlite+/home/goatcounter/goatcounter-data/goatcounter.db
-    cgroup_parent: goatcounter
+    cgroup_parent: goatcounter.slice
     volumes:
       - ./data/goatcounter:/home/goatcounter/goatcounter-data
     logging:

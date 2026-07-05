@@ -41,11 +41,11 @@ describe("ContainerStats", () => {
 
       // Advance usage_usec 2000ms later: nginx +200000, api +150000.
       writeFileSync(
-        join(dir, "nginx", "childa", "cpu.stat"),
+        join(dir, "nginx.slice", "childa", "cpu.stat"),
         "usage_usec 1200000\n",
       );
       writeFileSync(
-        join(dir, "api", "childb", "cpu.stat"),
+        join(dir, "api.slice", "childb", "cpu.stat"),
         "usage_usec 650000\n",
       );
       now = 3000;
@@ -130,7 +130,10 @@ describe("ContainerStats", () => {
   it("degrades when the slice exists but holds no child scope", async () => {
     await withTempCgroup(async (dir) => {
       // A lingering, empty parent slice (container exited) has no child scope dir.
-      rmSync(join(dir, "nginx", "childa"), { recursive: true, force: true });
+      rmSync(join(dir, "nginx.slice", "childa"), {
+        recursive: true,
+        force: true,
+      });
       const probe = vi.fn().mockResolvedValue(true);
       const stats = new ContainerStats({
         cgroupDir: dir,

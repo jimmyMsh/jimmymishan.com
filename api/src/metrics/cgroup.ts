@@ -39,10 +39,12 @@ function parseUsageUsec(cpuStat: string): number {
   return Number(match[1]);
 }
 
-// Each service gets its own compose `cgroup_parent` slice under cgroupDir. A
-// running container is the single child scope dir inside it; the slice lingers
-// empty once the container exits, so an absent child scope — not an absent
-// slice — is what marks the service down.
+// Each service gets its own compose `cgroup_parent` slice under cgroupDir,
+// named `<service>.slice` — the systemd cgroup driver rejects parents without
+// the .slice suffix, and the cgroupfs driver accepts them, so the suffix keeps
+// one name valid on both. A running container is the single child scope dir
+// inside it; the slice lingers empty once the container exits, so an absent
+// child scope — not an absent slice — is what marks the service down.
 function readServiceCgroup(sliceDir: string): CgroupReading {
   const children = readdirSync(sliceDir, { withFileTypes: true }).filter((e) =>
     e.isDirectory(),
@@ -97,7 +99,7 @@ export class ContainerStats {
   private async sampleService(svc: ServiceDef): Promise<ContainerStat> {
     let reading: CgroupReading;
     try {
-      reading = readServiceCgroup(join(this.cgroupDir, svc.name));
+      reading = readServiceCgroup(join(this.cgroupDir, `${svc.name}.slice`));
     } catch {
       this.prev.delete(svc.name);
       const up = svc.probeUrl ? await this.probe(svc.probeUrl) : false;

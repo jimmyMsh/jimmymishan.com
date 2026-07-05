@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/site.Dockerfile
       target: local
-    cgroup_parent: nginx
+    cgroup_parent: nginx.slice
     ports:
       - "8080:80"
       - "8443:443"
@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    cgroup_parent: api
+    cgroup_parent: api.slice
     environment:
       - LOG_TAIL_ALLOW_PRIVATE=true
     volumes:
@@ -43,7 +43,7 @@ services:
       - -tls=http
       - -automigrate
       - -db=sqlite+/home/goatcounter/goatcounter-data/goatcounter.db
-    cgroup_parent: goatcounter
+    cgroup_parent: goatcounter.slice
     volumes:
       - ./data/goatcounter:/home/goatcounter/goatcounter-data
     logging:
