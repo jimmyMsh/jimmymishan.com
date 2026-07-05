@@ -11,20 +11,21 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 if ! command -v sqlite3 >/dev/null 2>&1; then
-  sudo apt-get update -y
-  sudo apt-get install -y sqlite3
+  if command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y sqlite
+  else
+    sudo apt-get update -y
+    sudo apt-get install -y sqlite3
+  fi
 fi
 
-mkdir -p "$APP_DIR/data" "$APP_DIR/backups" "$APP_DIR/scripts"
+mkdir -p "$APP_DIR/data/goatcounter" "$APP_DIR/backups" "$APP_DIR/scripts"
+# The api (node) and goatcounter (uid 1000) containers run as non-root users
+# and must be able to create their SQLite files in these host directories.
+chmod 777 "$APP_DIR/data" "$APP_DIR/data/goatcounter"
 
 cron_line="30 3 * * * $APP_DIR/scripts/backup-sqlite.sh"
 (crontab -l 2>/dev/null | grep -vF 'backup-sqlite.sh' || true; echo "$cron_line") | crontab -
-
-if ! grep -qs 'ghcr.io' "$HOME/.docker/config.json"; then
-  echo "Log in to ghcr.io with a PAT that has ONLY read:packages scope."
-  read -rp "GitHub username: " gh_user
-  docker login ghcr.io -u "$gh_user"
-fi
 
 if [ ! -f "$APP_DIR/.env" ]; then
   echo "ERROR: $APP_DIR/.env is missing. Create it from .env.example, then re-run." >&2
