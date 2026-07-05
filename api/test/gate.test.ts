@@ -138,6 +138,21 @@ describe("DailyCaps", () => {
     expect(caps.allow("ip-a", "2026-07-03")).toBe(false);
     expect(caps.allow("ip-a", "2026-07-04")).toBe(true);
   });
+
+  it("refund restores a consumed slot within the same day", () => {
+    const caps = new DailyCaps(1, 10);
+    expect(caps.allow("ip1", "2026-07-05")).toBe(true);
+    expect(caps.allow("ip1", "2026-07-05")).toBe(false);
+    caps.refund("ip1", "2026-07-05");
+    expect(caps.allow("ip1", "2026-07-05")).toBe(true);
+  });
+
+  it("refund is a no-op across a day boundary", () => {
+    const caps = new DailyCaps(1, 10);
+    expect(caps.allow("ip1", "2026-07-05")).toBe(true);
+    caps.refund("ip1", "2026-07-06");
+    expect(caps.allow("ip1", "2026-07-05")).toBe(false);
+  });
 });
 
 describe("WriteCounters", () => {

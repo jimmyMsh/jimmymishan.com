@@ -123,6 +123,8 @@ export function contactRoutes(deps: ContactDeps): Hono {
       fetchFn,
     );
     if (!delivered) {
+      caps.refund(ipHash, utcDay(nowSecVal));
+      counters.rejected("contact", "delivery");
       return c.json({ error: "delivery_failed" }, 502);
     }
 
