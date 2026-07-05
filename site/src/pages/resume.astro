@@ -6,9 +6,6 @@ import { RESUME_PATH } from "../lib/meta";
 <BaseLayout title="Resume" description="Resume of Jimmy Mishan — Production Engineer at Meta.">
   <section>
     <h1>Resume</h1>
-    <p class="stale-note">
-      [PLACEHOLDER — this PDF is from Sept 2024; replace site/public/resume.pdf before cutover]
-    </p>
     <a class="cta" href={RESUME_PATH} download>Download PDF</a>
     <object data={RESUME_PATH} type="application/pdf" width="100%" height="800" title="Resume PDF">
       <p>
@@ -26,10 +23,6 @@ import { RESUME_PATH } from "../lib/meta";
   }
   h1 {
     font-size: var(--text-2xl);
-    margin-bottom: var(--space-4);
-  }
-  .stale-note {
-    color: var(--color-text-muted);
     margin-bottom: var(--space-4);
   }
   .cta {

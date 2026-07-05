@@ -1,0 +1,17 @@
+{
+  "role": "Fellow, Technical Lead",
+  "company": "Solana Foundation",
+  "start": "2026-02",
+  "end": "2026-05",
+  "summary": "Led the technical build of an open-source Solana portfolio tracker in React and TypeScript, owning the path from wallet connection through live on-chain asset ingestion, normalization, and portfolio UI.",
+  "highlights": [
+    "Built the core wallet-to-portfolio flow: wallet connection, on-chain asset ingestion, normalization, token metadata, and portfolio UI.",
+    "Fixed silent 64-bit precision loss in on-chain financial values by tracing the issue below application logic to transport-layer JSON parsing.",
+    "Hardened the app against malformed and adversarial token metadata with per-record fault isolation, Unicode sanitization, MIME-gated image handling, and graceful fallbacks.",
+    "Set a reliability bar with 287 tests across 23 files, strict TypeScript, and lint/type/build CI gates focused on parsing, normalization, and UI failure states.",
+    "Made a trust-and-safety call not to ship a 'verified token' badge after live-data analysis showed the on-chain fields could imply legitimacy they could not prove."
+  ],
+  "link": "https://github.com/solana-foundation/portfolio",
+  "logo": "../../assets/img/solana.png",
+  "order": 1
+}

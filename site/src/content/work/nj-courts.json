@@ -2,7 +2,7 @@
   "role": "Software Engineering Intern",
   "company": "New Jersey Courts (Supreme Court of NJ)",
   "start": "2024-06",
-  "end": "[PLACEHOLDER — real end month as YYYY-MM]",
+  "end": "2025-05",
   "summary": "Automated attendance-data processing and built a mobile attendance app used across 20+ annual events for the NJ judiciary.",
   "highlights": [
     "Led the development of a Node.js application to automate the processing of attendance data from CSV and JSON files, reducing manual data entry time by an estimated 80% and improving data accuracy.",
@@ -13,5 +13,5 @@
   ],
   "link": "https://www.njcourts.gov/",
   "logo": "../../assets/img/nj-courts.jpg",
-  "order": 2
+  "order": 4
 }

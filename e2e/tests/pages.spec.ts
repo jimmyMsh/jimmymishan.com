@@ -66,11 +66,11 @@ test("homepage: hero and all four sections", async ({ page }) => {
     await expect(page.locator(`section#${id}`)).toBeVisible();
   }
 
-  await expect(page.locator("section#work article")).toHaveCount(4);
+  await expect(page.locator("section#work article")).toHaveCount(6);
   await expect(
     page
       .locator("section#work")
-      .getByText("Production Engineer", { exact: true }),
+      .getByText("Production Engineering Intern", { exact: true }),
   ).toBeVisible();
   await expect(
     page.locator("section#work").getByText(/Jun 2024 – Sep 2024/),

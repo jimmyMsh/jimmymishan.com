@@ -1,0 +1,15 @@
+{
+  "role": "Production Engineering Program Designer",
+  "company": "Major League Hacking (Contract)",
+  "start": "2025-10",
+  "end": "2026-04",
+  "summary": "Collaborated with MLH leadership to design and launch a Meta-sponsored Production Engineering Hackathon that attracted 1.5K registrations, 621 attendees, and 115 teams.",
+  "highlights": [
+    "Designed a roadmap-based technical program covering deployment automation, observability, scalability, and reliability engineering.",
+    "Built participant tooling and guidance to help teams navigate challenges and apply production engineering concepts.",
+    "Developed an achievement and verification framework to assess applied understanding of PE/SRE principles.",
+    "Shaped event programming and the participant experience, including speaking on the first day of the event."
+  ],
+  "link": "https://mlh.io/",
+  "order": 2
+}

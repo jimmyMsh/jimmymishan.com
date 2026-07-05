@@ -1,6 +1,6 @@
 {
   "name": "PE-portfolio",
-  "summary": "[PLACEHOLDER — curate] The previous version of this site: a Flask + MySQL portfolio with an admin timeline, deployed with Docker and GitHub Actions.",
+  "summary": "The previous version of this site: a Flask + MySQL portfolio with an admin timeline, deployed with Docker and GitHub Actions.",
   "tags": ["Python", "Flask", "MySQL", "Docker"],
   "repo": "https://github.com/jimmyMsh/PE-portfolio",
   "order": 2
