@@ -107,3 +107,8 @@ test("unknown route returns the 404 page", async ({ page }) => {
   expect(response?.status()).toBe(404);
   await expect(page.getByText(/command not found/)).toBeVisible();
 });
+
+test("anchor targets clear the sticky header", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#about")).toHaveCSS("scroll-margin-top", "88px");
+});

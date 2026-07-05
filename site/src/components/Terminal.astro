@@ -126,6 +126,10 @@ const payloadJson = JSON.stringify(payload).replaceAll("<", "\\u003c");
   .term :global(.term-input:focus:not(:focus-visible)) {
     outline: none;
   }
+  .term :global(.term-input:focus-visible) {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--focus-ring-width) var(--color-accent);
+  }
   .term :global(.cursor),
   .cursor {
     display: inline-block;

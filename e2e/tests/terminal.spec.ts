@@ -116,6 +116,20 @@ test("Ctrl+L clears the screen and the prompt keeps working", async ({
   await expect(page.getByText("/home/jimmy")).toBeVisible();
 });
 
+test("focused command input shows an unclipped inset focus ring", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await openTerminal(page);
+  const input = page.locator(".term-input");
+  await input.focus();
+  await expect(input).toHaveCSS("outline-style", "none");
+  const boxShadow = await input.evaluate(
+    (el) => getComputedStyle(el).boxShadow,
+  );
+  expect(boxShadow).toContain("inset");
+});
+
 test.describe("reduced motion", () => {
   test("renders the finished state without typing", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
