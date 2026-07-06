@@ -23,6 +23,7 @@ services:
     cgroup_parent: api.slice
     environment:
       - LOG_TAIL_ALLOW_PRIVATE=true
+      - GUESTBOOK_DISCORD_WEBHOOK=${GUESTBOOK_DISCORD_WEBHOOK:-}
     volumes:
       - ./data:/data
       - /sys/fs/cgroup:/host/cgroup:ro

@@ -24,6 +24,7 @@ function fakeDeps(overrides?: Partial<AppDeps>): AppDeps {
       dataDir: "/data",
       guestbookEnabled: true,
       contactDiscordWebhook: null,
+      guestbookDiscordWebhook: null,
       logTailEnabled: true,
       logTailAllowPrivate: false,
       writeSecret: null,
@@ -46,6 +47,7 @@ function fakeDeps(overrides?: Partial<AppDeps>): AppDeps {
       enabled: true,
       caps: new DailyCaps(100, 1000),
       counters: writeCounters,
+      webhookUrl: null,
     },
     contact: {
       webhookUrl: null,

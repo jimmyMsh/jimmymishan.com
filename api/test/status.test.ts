@@ -18,6 +18,7 @@ const CONFIG: Config = {
   dataDir: "/data",
   guestbookEnabled: true,
   contactDiscordWebhook: null,
+  guestbookDiscordWebhook: null,
   logTailEnabled: true,
   logTailAllowPrivate: false,
   writeSecret: null,

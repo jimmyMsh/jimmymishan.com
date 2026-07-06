@@ -128,6 +128,7 @@ const deps: AppDeps = {
     enabled: config.guestbookEnabled,
     caps: guestbookCaps,
     counters: writeCounters,
+    webhookUrl: config.guestbookDiscordWebhook,
   },
   contact: {
     webhookUrl: config.contactDiscordWebhook,
