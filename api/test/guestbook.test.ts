@@ -516,6 +516,7 @@ function parsedBody(fetchFn: ReturnType<typeof vi.fn>): {
   url: unknown;
   init: RequestInit;
   body: {
+    content: string;
     embeds: Array<{
       title: string;
       description: string;
@@ -553,16 +554,21 @@ describe("sendGuestbookEmbed", () => {
     );
     expect(body.embeds[0].title).toBe("Guestbook entry #42");
     expect(body.embeds[0].description).toBe("hello there");
-    expect(body.embeds[0].fields[0]).toEqual({ name: "From", value: "vera" });
-    const moderate = body.embeds[0].fields[1];
-    expect(moderate.name).toBe("Moderate");
-    expect(moderate.value).toContain(
+    expect(body.embeds[0].fields).toEqual([{ name: "From", value: "vera" }]);
+    // Moderation commands live in the message content (not an embed field) as
+    // two separate fenced blocks, so Discord mobile shows a per-block copy
+    // button; embed-field text isn't selectable on mobile.
+    expect(body.content).toContain(
       "docker compose -f compose.prod.yaml exec api node api/dist/cli.js guestbook delete 42'",
     );
-    expect(moderate.value).toContain("guestbook block abc123'");
+    // Each command is its own fenced block (two balanced ``` pairs, one command
+    // per block) so the Discord mobile app renders a per-block copy button.
+    expect(body.content).toMatch(
+      /^```\nssh vps '[^\n]*guestbook delete 42'\n```\n```\nssh vps '[^\n]*guestbook block abc123'\n```$/,
+    );
     // Paste-command injection guard: visitor text never enters the commands.
-    expect(moderate.value).not.toContain("vera");
-    expect(moderate.value).not.toContain("hello there");
+    expect(body.content).not.toContain("vera");
+    expect(body.content).not.toContain("hello there");
     expect(body.allowed_mentions).toEqual({ parse: [] });
     expect(Number.isNaN(Date.parse(body.embeds[0].timestamp))).toBe(false);
   });

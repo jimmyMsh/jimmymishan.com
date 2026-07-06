@@ -71,23 +71,24 @@ export async function sendGuestbookEmbed(
   payload: { id: number; name: string; message: string; ipHash: string },
   fetchFn: typeof fetch = fetch,
 ): Promise<boolean> {
+  // Each command is its own fenced block in the message content so the Discord
+  // mobile app renders a per-block copy button — embed *field* text isn't
+  // selectable on mobile, which is why the commands don't live in a field.
   const moderate = [
-    "```",
     `ssh vps '${MOD_CLI} delete ${payload.id}'`,
     `ssh vps '${MOD_CLI} block ${payload.ipHash}'`,
-    "```",
-  ].join("\n");
+  ]
+    .map((cmd) => `\`\`\`\n${cmd}\n\`\`\``)
+    .join("\n");
   return postEmbed(
     webhookUrl,
     {
+      content: moderate,
       embeds: [
         {
           title: `Guestbook entry #${payload.id}`,
           description: payload.message,
-          fields: [
-            { name: "From", value: payload.name },
-            { name: "Moderate", value: moderate },
-          ],
+          fields: [{ name: "From", value: payload.name }],
           timestamp: new Date().toISOString(),
         },
       ],
