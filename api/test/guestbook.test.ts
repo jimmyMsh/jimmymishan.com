@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { openGuestbookDb } from "../src/db.js";
+import { sendGuestbookEmbed } from "../src/discord.js";
 import { guestbookRoutes } from "../src/routes/guestbook.js";
 import {
   clientIp,
@@ -498,5 +499,107 @@ describe("POST /api/guestbook", () => {
     };
     expect(row.ip_hash).toBe(hashIp(secret, "9.9.9.9"));
     expect(row.ip_hash).not.toBe("9.9.9.9");
+  });
+});
+
+const WEBHOOK_URL = "https://discord.com/api/webhooks/123456/token-abc";
+
+function jsonResponse(status: number): Response {
+  return { ok: status >= 200 && status < 300, status } as unknown as Response;
+}
+
+function parsedBody(fetchFn: ReturnType<typeof vi.fn>): {
+  url: unknown;
+  init: RequestInit;
+  body: {
+    embeds: Array<{
+      title: string;
+      description: string;
+      fields: Array<{ name: string; value: string }>;
+      timestamp: string;
+    }>;
+    allowed_mentions: { parse: string[] };
+  };
+} {
+  const [url, init] = fetchFn.mock.calls[0] as [unknown, RequestInit];
+  return { url, init, body: JSON.parse(init.body as string) };
+}
+
+describe("sendGuestbookEmbed", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("posts the pinned payload with paste-ready moderation commands", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(204));
+
+    const ok = await sendGuestbookEmbed(
+      WEBHOOK_URL,
+      { id: 42, name: "vera", message: "hello there", ipHash: "abc123" },
+      fetchFn,
+    );
+
+    expect(ok).toBe(true);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const { url, init, body } = parsedBody(fetchFn);
+    expect(url).toBe(WEBHOOK_URL);
+    expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>)["content-type"]).toMatch(
+      /application\/json/i,
+    );
+    expect(body.embeds[0].title).toBe("Guestbook entry #42");
+    expect(body.embeds[0].description).toBe("hello there");
+    expect(body.embeds[0].fields[0]).toEqual({ name: "From", value: "vera" });
+    const moderate = body.embeds[0].fields[1];
+    expect(moderate.name).toBe("Moderate");
+    expect(moderate.value).toContain(
+      "docker compose -f compose.prod.yaml exec api node api/dist/cli.js guestbook delete 42'",
+    );
+    expect(moderate.value).toContain("guestbook block abc123'");
+    // Paste-command injection guard: visitor text never enters the commands.
+    expect(moderate.value).not.toContain("vera");
+    expect(moderate.value).not.toContain("hello there");
+    expect(body.allowed_mentions).toEqual({ parse: [] });
+    expect(Number.isNaN(Date.parse(body.embeds[0].timestamp))).toBe(false);
+  });
+
+  it("returns false on a non-2xx response", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(500));
+
+    await expect(
+      sendGuestbookEmbed(
+        WEBHOOK_URL,
+        { id: 1, name: "a", message: "b", ipHash: "c" },
+        fetchFn,
+      ),
+    ).resolves.toBe(false);
+  });
+
+  it("returns false when fetch throws a network error", async () => {
+    const fetchFn = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+
+    await expect(
+      sendGuestbookEmbed(
+        WEBHOOK_URL,
+        { id: 1, name: "a", message: "b", ipHash: "c" },
+        fetchFn,
+      ),
+    ).resolves.toBe(false);
+  });
+
+  it("returns false after a 5s timeout when the fetch never resolves", async () => {
+    vi.useFakeTimers();
+    const fetchFn = vi.fn(() => new Promise<Response>(() => {}));
+
+    const pending = sendGuestbookEmbed(
+      WEBHOOK_URL,
+      { id: 1, name: "a", message: "b", ipHash: "c" },
+      fetchFn,
+    );
+    await vi.advanceTimersByTimeAsync(5000);
+
+    await expect(pending).resolves.toBe(false);
   });
 });
