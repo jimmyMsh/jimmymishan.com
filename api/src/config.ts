@@ -6,6 +6,7 @@ export interface Config {
   dataDir: string;
   guestbookEnabled: boolean;
   contactDiscordWebhook: string | null;
+  guestbookDiscordWebhook: string | null;
   logTailEnabled: boolean;
   logTailAllowPrivate: boolean;
   writeSecret: string | null;
@@ -60,6 +61,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
       true,
     ),
     contactDiscordWebhook: nonEmpty(env.CONTACT_DISCORD_WEBHOOK) ?? null,
+    guestbookDiscordWebhook: nonEmpty(env.GUESTBOOK_DISCORD_WEBHOOK) ?? null,
     logTailEnabled: parseBool(env.LOG_TAIL_ENABLED, "LOG_TAIL_ENABLED", true),
     logTailAllowPrivate: parseBool(
       env.LOG_TAIL_ALLOW_PRIVATE,

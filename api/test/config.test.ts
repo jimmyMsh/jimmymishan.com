@@ -12,6 +12,7 @@ describe("loadConfig", () => {
       dataDir: "/data",
       guestbookEnabled: true,
       contactDiscordWebhook: null,
+      guestbookDiscordWebhook: null,
       logTailEnabled: true,
       logTailAllowPrivate: false,
       writeSecret: null,
@@ -117,5 +118,21 @@ describe("loadConfig", () => {
   it("carries a set WRITE_SECRET through", () => {
     const config = loadConfig({ WRITE_SECRET: "shh-write" });
     expect(config.writeSecret).toBe("shh-write");
+  });
+
+  it("defaults GUESTBOOK_DISCORD_WEBHOOK to null when unset or empty", () => {
+    expect(loadConfig({}).guestbookDiscordWebhook).toBeNull();
+    expect(
+      loadConfig({ GUESTBOOK_DISCORD_WEBHOOK: "" }).guestbookDiscordWebhook,
+    ).toBeNull();
+  });
+
+  it("passes a set GUESTBOOK_DISCORD_WEBHOOK through", () => {
+    const config = loadConfig({
+      GUESTBOOK_DISCORD_WEBHOOK: "https://discord.com/api/webhooks/1/t",
+    });
+    expect(config.guestbookDiscordWebhook).toBe(
+      "https://discord.com/api/webhooks/1/t",
+    );
   });
 });

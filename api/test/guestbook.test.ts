@@ -19,6 +19,8 @@ function buildApp(opts?: {
   now?: () => number;
   perIpCap?: number;
   globalCap?: number;
+  webhookUrl?: string | null;
+  fetchFn?: typeof fetch;
 }) {
   const db = openGuestbookDb(":memory:");
   const secret = opts?.secret ?? SECRET;
@@ -30,6 +32,8 @@ function buildApp(opts?: {
     enabled: opts?.enabled ?? true,
     caps,
     counters,
+    webhookUrl: opts?.webhookUrl ?? null,
+    fetchFn: opts?.fetchFn,
     nowSec: opts?.now ?? (() => FIXED_NOW),
   });
   return { app, db, caps, counters, secret };
@@ -601,5 +605,93 @@ describe("sendGuestbookEmbed", () => {
     await vi.advanceTimersByTimeAsync(5000);
 
     await expect(pending).resolves.toBe(false);
+  });
+});
+
+describe("POST /api/guestbook discord notification", () => {
+  it("notifies with the new entry id and still returns 201", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(204));
+    const { app, secret } = buildApp({ webhookUrl: WEBHOOK_URL, fetchFn });
+
+    const res = await postGuestbook(app, validBody(secret));
+
+    expect(res.status).toBe(201);
+    const { entry } = (await res.json()) as { entry: { id: number } };
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const { url, init } = parsedBody(fetchFn);
+    expect(url).toBe(WEBHOOK_URL);
+    expect(init.body as string).toContain(`Guestbook entry #${entry.id}`);
+  });
+
+  it("returns 201 even when delivery fails", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(500));
+    const { app, secret } = buildApp({ webhookUrl: WEBHOOK_URL, fetchFn });
+
+    const res = await postGuestbook(app, validBody(secret));
+
+    expect(res.status).toBe(201);
+  });
+
+  it("returns 201 immediately when the webhook never resolves", async () => {
+    const fetchFn = vi.fn(() => new Promise<Response>(() => {}));
+    const { app, secret } = buildApp({ webhookUrl: WEBHOOK_URL, fetchFn });
+
+    const res = await postGuestbook(app, validBody(secret));
+
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { entry: { message: string } };
+    expect(body.entry.message).toBe("hello there");
+  });
+
+  it("does not notify when no webhook is configured", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(204));
+    const { app, secret } = buildApp({ webhookUrl: null, fetchFn });
+
+    await postGuestbook(app, validBody(secret));
+
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("does not notify on the honeypot fake-success path", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(204));
+    const { app, secret } = buildApp({ webhookUrl: WEBHOOK_URL, fetchFn });
+
+    const res = await postGuestbook(
+      app,
+      validBody(secret, { website: "spam-bot" }),
+    );
+
+    expect(res.status).toBe(201);
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("does not notify a blocked ip's fake success", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(204));
+    const { app, db, secret } = buildApp({ webhookUrl: WEBHOOK_URL, fetchFn });
+    db.prepare("INSERT INTO blocklist (ip_hash, ts) VALUES (?, ?)").run(
+      hashIp(secret, "9.9.9.9"),
+      FIXED_NOW,
+    );
+
+    const res = await postGuestbook(app, validBody(secret), { ip: "9.9.9.9" });
+
+    expect(res.status).toBe(201);
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("notifies only the accepted sign when the daily cap rejects the second", async () => {
+    const fetchFn = vi.fn(async () => jsonResponse(204));
+    const { app, secret } = buildApp({
+      webhookUrl: WEBHOOK_URL,
+      fetchFn,
+      perIpCap: 1,
+    });
+
+    const first = await postGuestbook(app, validBody(secret));
+    const second = await postGuestbook(app, validBody(secret));
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(429);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 });

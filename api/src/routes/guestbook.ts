@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { Hono } from "hono";
+import { sendGuestbookEmbed } from "../discord.js";
 import {
   cleanText,
   clientIp,
@@ -17,6 +18,8 @@ export interface GuestbookDeps {
   enabled: boolean;
   caps: DailyCaps;
   counters: WriteCounters;
+  webhookUrl: string | null;
+  fetchFn?: typeof fetch;
   nowSec?: () => number;
 }
 
@@ -70,7 +73,8 @@ function utcDay(tsSec: number): string {
 }
 
 export function guestbookRoutes(deps: GuestbookDeps): Hono {
-  const { db, secret, caps, counters } = deps;
+  const { db, secret, caps, counters, webhookUrl } = deps;
+  const fetchFn = deps.fetchFn ?? fetch;
   const nowSec = deps.nowSec ?? (() => Math.floor(Date.now() / 1000));
   const app = new Hono();
 
@@ -166,17 +170,23 @@ export function guestbookRoutes(deps: GuestbookDeps): Hono {
 
     const result = insertEntry.run(name, message, nowSecVal, ipHash);
     counters.accepted("guestbook");
-    return c.json(
-      {
-        entry: {
-          id: Number(result.lastInsertRowid),
-          name,
-          message,
-          ts: nowSecVal,
-        },
-      },
-      201,
-    );
+    const id = Number(result.lastInsertRowid);
+    if (webhookUrl !== null) {
+      // The sign is the product; the notification is a side channel that must
+      // never delay or fail the response — so no await. sendGuestbookEmbed is
+      // contracted never to reject; the .catch is defensive insurance so a
+      // future contract slip can't crash this single-instance process.
+      void sendGuestbookEmbed(
+        webhookUrl,
+        { id, name, message, ipHash },
+        fetchFn,
+      )
+        .then((ok) => {
+          if (!ok) console.error(`guestbook notify failed for entry ${id}`);
+        })
+        .catch(() => {});
+    }
+    return c.json({ entry: { id, name, message, ts: nowSecVal } }, 201);
   });
 
   return app;
